@@ -50,7 +50,7 @@ services:
     image: openlmis/report
 
   db:
-    image: openlmis/postgres:12-debezium
+    image: openlmis/postgres:9.6
     env_file: .env
 
   log:
