@@ -1,3 +1,9 @@
+1.2.2 / WIP
+=================
+
+Breaking changes:
+* [OLMIS-7472](https://openlmis.atlassian.net/browse/OLMIS-7472): Upgrade postgres to v12
+
 1.2.1 / 2020-07-08
 =================
 
