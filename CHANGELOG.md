@@ -4,6 +4,9 @@
 Breaking changes:
 * [OLMIS-7472](https://openlmis.atlassian.net/browse/OLMIS-7472): Upgrade postgres to v12
 
+Improvements:
+* [OLMIS-7568](https://openlmis.atlassian.net/browse/OLMIS-7568): Use openlmis/dev:7
+
 1.2.1 / 2020-07-08
 =================
 
