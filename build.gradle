@@ -13,10 +13,6 @@ plugins {
     id "com.moowork.node" version "1.2.0"
 }
 
-dependencies {
-    compile 'org.projectlombok:lombok:1.18.22'
-}
-
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
