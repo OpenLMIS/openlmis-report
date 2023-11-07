@@ -31,9 +31,9 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Build with Docker Compose
-        run: | 
+        run: |
           curl -o .env -L https://raw.githubusercontent.com/OpenLMIS/openlmis-ref-distro/master/settings-sample.env
-          docker-compose -f docker-compose.builder.yml run builder
+          docker-compose -f docker-compose.builder.yml run --user "$(id -u):$(id -g)" builder
           cp ./build/reports/jacoco/test/jacocoTestReport.xml report.xml
           rm -rf ./build
       - name: Analyze
