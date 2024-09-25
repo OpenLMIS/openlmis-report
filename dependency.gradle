@@ -31,6 +31,7 @@ dependencies {
 
     compile "org.apache.poi:poi:3.15"
     compile "org.apache.poi:poi-ooxml:3.15"
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
     testCompile "com.github.tomakehurst:wiremock:1.58"
     testCompile "com.jayway.restassured:rest-assured:2.7.0"
@@ -45,4 +46,5 @@ dependencies {
     testCompile "org.powermock:powermock-module-junit4:2.0.4"
     testCompile "org.springframework.boot:spring-boot-starter-test"
     testCompile "nl.jqno.equalsverifier:equalsverifier:2.4"
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 }
