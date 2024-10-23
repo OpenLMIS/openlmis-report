@@ -1,3 +1,9 @@
+1.2.3 / WIP
+=================
+Improvements:
+* [OLMIS-8000](https://openlmis.atlassian.net/browse/OLMIS-8000): Improve Pick Pack report performance
+* [OIS-48](https://openlmis.atlassian.net/browse/OIS-48): Update service base images to versions without known vulnerabilities
+
 1.2.2 / 2022-04-21
 =================
 
