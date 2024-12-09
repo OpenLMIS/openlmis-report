@@ -1,4 +1,7 @@
-1.2.3 / 31.10.2024
+1.3.0 / wip
+=================
+
+1.2.3 / 2024-10-31
 =================
 Improvements:
 * [OLMIS-8000](https://openlmis.atlassian.net/browse/OLMIS-8000): Improve Pick Pack report performance
