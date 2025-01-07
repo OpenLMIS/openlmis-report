@@ -28,6 +28,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -40,6 +41,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+@Getter
+@Setter
 @Builder
 @Entity
 @Table(name = "jasper_templates")
@@ -48,29 +51,19 @@ import org.hibernate.annotations.FetchMode;
 public class JasperTemplate extends BaseEntity {
 
   @Column(columnDefinition = TEXT_COLUMN_DEFINITION, unique = true, nullable = false)
-  @Getter
-  @Setter
   private String name;
 
   @Column
-  @Getter
-  @Setter
   private byte[] data;
 
   @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
-  @Getter
-  @Setter
   private String type;
 
   @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
-  @Getter
-  @Setter
   private String description;
 
   @ElementCollection
   @CollectionTable
-  @Getter
-  @Setter
   private List<String> requiredRights;
 
   @OneToMany(
@@ -79,21 +72,19 @@ public class JasperTemplate extends BaseEntity {
       fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
-  @Getter
-  @Setter
   private List<JasperTemplateParameter> templateParameters;
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "jasper_templates_report_images",
       joinColumns = @JoinColumn(name = "jaspertemplateid", nullable = false),
       inverseJoinColumns = @JoinColumn(name = "reportimageid", nullable = false))
-  @Getter
-  @Setter
   private Set<ReportImage> reportImages = new HashSet<>();
 
-  @Getter
-  @Setter
   private Boolean visible;
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "categoryid", referencedColumnName = "id", nullable = false)
+  private ReportCategory category;
 
   /**
    * Export this object to the specified exporter (DTO).
@@ -106,6 +97,7 @@ public class JasperTemplate extends BaseEntity {
     exporter.setId(id);
     exporter.setName(name);
     exporter.setType(type);
+    exporter.setCategory(category);
   }
 
   @PrePersist
@@ -132,5 +124,7 @@ public class JasperTemplate extends BaseEntity {
     void setDescription(String description);
 
     void setRequiredRights(List<String> rights);
+
+    void setCategory(ReportCategory category);
   }
 }

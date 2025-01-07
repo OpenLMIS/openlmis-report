@@ -13,23 +13,9 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.utils;
 
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
+public enum ReportType {
+  POWERBI,
+  SUPERSET
 }

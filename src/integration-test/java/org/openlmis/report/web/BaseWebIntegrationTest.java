@@ -35,7 +35,9 @@ import guru.nidi.ramltester.RamlDefinition;
 import guru.nidi.ramltester.RamlLoaders;
 import guru.nidi.ramltester.restassured.RestAssuredClient;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
+
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -54,9 +56,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Transactional
 @ActiveProfiles("test")
 @DirtiesContext
 public abstract class BaseWebIntegrationTest {
@@ -64,6 +68,8 @@ public abstract class BaseWebIntegrationTest {
   protected static final String CONTENT_TYPE = "Content-Type";
   protected static final String RAML_ASSERT_MESSAGE =
       "HTTP request/response should match RAML definition.";
+
+  private final AtomicInteger categoryNumber = new AtomicInteger(0);
 
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(80);
@@ -98,6 +104,10 @@ public abstract class BaseWebIntegrationTest {
     RamlDefinition ramlDefinition = RamlLoaders.fromClasspath()
         .load("api-definition-raml.yaml").ignoringXheaders();
     restAssured = ramlDefinition.createRestAssured();
+  }
+
+  int getNextCategoryNumber() {
+    return this.categoryNumber.incrementAndGet();
   }
 
   protected void mockUserAuthenticated() {

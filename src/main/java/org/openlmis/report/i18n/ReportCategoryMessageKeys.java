@@ -13,23 +13,18 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.i18n;
 
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+public class ReportCategoryMessageKeys extends ReportingMessageKeys {
+  private static final String ERROR = join(SERVICE_ERROR, "reportCategory");
+  private static final String NAME = join(SERVICE_ERROR, "name");
+  private static final String ID = "id";
+  private static final String MISMATCH = "mismatch";
+  private static final String DUPLICATED = join(SERVICE_ERROR, "duplicated");
+  public static final String ERROR_REPORT_CATEGORY_NAME_DUPLICATED =
+      join(ERROR, NAME, DUPLICATED);
+  public static final String ERROR_REPORT_CATEGORY_NOT_FOUND = join(ERROR, NOT_FOUND);
+  public static final String ERROR_REPORT_CATEGORY_ID_MISMATCH = join(ERROR, ID, MISMATCH);
+  public static final String ERROR_CATEGORY_ASSIGNED = join(ERROR, "assigned");
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
 }

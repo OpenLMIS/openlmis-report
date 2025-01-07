@@ -13,23 +13,15 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.repository;
 
+import java.util.Optional;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.openlmis.report.domain.ReportCategory;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
+public interface ReportCategoryRepository
+    extends PagingAndSortingRepository<ReportCategory, UUID> {
+  Optional<ReportCategory> findByName(@Param("name") String name);
 }

@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -48,12 +49,15 @@ import net.sf.jasperreports.engine.JasperReport;
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.JasperTemplateParameter;
 import org.openlmis.report.domain.JasperTemplateParameterDependency;
+import org.openlmis.report.domain.ReportCategory;
 import org.openlmis.report.domain.ReportImage;
 import org.openlmis.report.exception.JasperReportViewException;
 import org.openlmis.report.exception.ReportingException;
 import org.openlmis.report.exception.ValidationMessageException;
+import org.openlmis.report.i18n.ReportCategoryMessageKeys;
 import org.openlmis.report.i18n.ReportImageMessageKeys;
 import org.openlmis.report.repository.JasperTemplateRepository;
+import org.openlmis.report.repository.ReportCategoryRepository;
 import org.openlmis.report.repository.ReportImageRepository;
 import org.openlmis.report.service.referencedata.RightReferenceDataService;
 import org.openlmis.report.utils.Message;
@@ -78,6 +82,9 @@ public class JasperTemplateService {
   @Autowired
   private ReportImageRepository reportImageRepository;
 
+  @Autowired
+  private ReportCategoryRepository reportCategoryRepository;
+
   /**
    * Saves a template with given name.
    * If template already exists, only description and required rights are updated.
@@ -88,10 +95,16 @@ public class JasperTemplateService {
    * @return saved report template
    */
   public JasperTemplate saveTemplate(
-      MultipartFile file, String name, String description, List<String> requiredRights)
-      throws ReportingException {
+      MultipartFile file, String name, String description, List<String> requiredRights,
+      String category) throws ReportingException {
     validateRequiredRights(requiredRights);
     JasperTemplate jasperTemplate = jasperTemplateRepository.findByName(name);
+
+    Optional<ReportCategory> reportCategory = reportCategoryRepository.findByName(category);
+    if (!reportCategory.isPresent()) {
+      throw new ReportingException(
+        ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NOT_FOUND);
+    }
 
     if (jasperTemplate == null) {
       jasperTemplate = JasperTemplate.builder()
@@ -99,11 +112,13 @@ public class JasperTemplateService {
           .type(DEFAULT_REPORT_TYPE)
           .description(description)
           .requiredRights(requiredRights)
+          .category(reportCategory.get())
           .build();
     } else {
       jasperTemplate.setDescription(description);
       jasperTemplate.getRequiredRights().clear();
       jasperTemplate.getRequiredRights().addAll(requiredRights);
+      jasperTemplate.setCategory(reportCategory.get());
     }
 
     validateFileAndSaveTemplate(jasperTemplate, file);

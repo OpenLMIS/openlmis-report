@@ -13,23 +13,27 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.repository;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.openlmis.report.domain.DashboardReport;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
+public interface DashboardReportRepository
+    extends PagingAndSortingRepository<DashboardReport, UUID> {
+
+  Page<DashboardReport> findByEnabled(@Param("enabled") boolean enabled, Pageable pageable);
+
+  List<DashboardReport> findByShowOnHomePage(boolean showOnHomePage);
+
+
+  Optional<DashboardReport> findByName(@Param("name") String name);
+
+  boolean existsByCategory_Id(UUID categoryId);
+
 }

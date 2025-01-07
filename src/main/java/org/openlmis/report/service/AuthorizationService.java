@@ -21,6 +21,7 @@ import java.util.Map;
 import org.apache.commons.codec.binary.Base64;
 import org.openlmis.report.utils.RequestParameters;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -73,6 +74,11 @@ public class AuthorizationService {
 
   void setRestTemplate(RestOperations restTemplate) {
     this.restTemplate = restTemplate;
+  }
+
+  @CacheEvict(cacheNames = "token", allEntries = true)
+  public void clearTokenCache() {
+    // Intentionally blank
   }
   
 }
