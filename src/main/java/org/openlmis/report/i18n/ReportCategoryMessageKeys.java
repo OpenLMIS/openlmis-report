@@ -13,23 +13,16 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.i18n;
 
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+public class ReportCategoryMessageKeys extends MessageKeys {
+  public static final String ERROR_REPORT_CATEGORY_NAME_DUPLICATED =
+      "report.error.reportCategory.name.duplicated";
+  public static final String ERROR_REPORT_CATEGORY_NOT_FOUND =
+      "report.error.reportCategory.notFound";
+  public static final String ERROR_REPORT_CATEGORY_ID_MISMATCH =
+      "report.error.reportCategory.id.mismatch";
+  public static final String ERROR_CATEGORY_ALREADY_ASSIGNED =
+      "report.error.reportCategory.already.assigned";
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
 }

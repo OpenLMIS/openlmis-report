@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
+
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.dto.JasperTemplateDto;
 import org.openlmis.report.exception.JasperReportViewException;
@@ -98,7 +99,7 @@ public class JasperTemplateController extends BaseController {
   @ResponseStatus(HttpStatus.OK)
   public void createJasperReportTemplate(
       @RequestPart("file") MultipartFile file, String name, String description,
-      String[] requiredRights) throws ReportingException {
+      String[] requiredRights, String category) throws ReportingException {
     permissionService.canEditReportTemplates();
 
     LOGGER.debug("Saving template with name: " + name);
@@ -107,7 +108,7 @@ public class JasperTemplateController extends BaseController {
         ? Collections.emptyList() : Arrays.asList(requiredRights);
 
     JasperTemplate template = jasperTemplateService
-        .saveTemplate(file, name, description, rightList);
+        .saveTemplate(file, name, description, rightList, category);
 
     LOGGER.debug("Saved template with id: " + template.getId());
   }
@@ -185,8 +186,7 @@ public class JasperTemplateController extends BaseController {
     }
 
     List<String> requiredRights = template.getRequiredRights();
-    permissionService.validatePermissions(
-        requiredRights.toArray(new String[requiredRights.size()]));
+    permissionService.validatePermissions(requiredRights.toArray(new String[0]));
 
     Map<String, Object> map = jasperTemplateService.mapRequestParametersToTemplate(
         request, template

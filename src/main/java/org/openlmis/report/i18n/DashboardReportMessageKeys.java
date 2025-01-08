@@ -13,23 +13,17 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package org.openlmis.report.dto.external.referencedata;
+package org.openlmis.report.i18n;
 
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public final class RightDto {
-  private UUID id;
-  private String name;
-  private RightType type;
-  private String description;
+public class DashboardReportMessageKeys extends MessageKeys {
+  public static final String ERROR_DASHBOARD_REPORT_NAME_DUPLICATED =
+      "report.error.dashboardReport.name.duplicated";
+  public static final String ERROR_DASHBOARD_REPORT_NOT_FOUND =
+      "report.error.dashboardReport.notFound";
+  public static final String ERROR_DASHBOARD_REPORT_ID_MISMATCH =
+      "report.error.dashboardReport.id.mismatch";
+  public static final String ERROR_COULD_NOT_SAVE_RIGHT =
+      "report.error.dashboardReport.save.right.failed";
+  public static final String ERROR_COULD_NOT_DELETE_RIGHT =
+      "report.error.dashboardReport.delete.right.failed";
 }

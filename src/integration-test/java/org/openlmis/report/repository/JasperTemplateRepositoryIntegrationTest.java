@@ -22,18 +22,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
+
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.JasperTemplateParameter;
+import org.openlmis.report.domain.ReportCategory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class JasperTemplateRepositoryIntegrationTest extends
     BaseCrudRepositoryIntegrationTest<JasperTemplate> {
 
   private static final String NAME = "TemplateRepositoryIntegrationTest";
+  private static final String CATEGORY_NAME = "Default Category";
 
   @Autowired
   private JasperTemplateRepository jasperTemplateRepository;
+
+  @Autowired
+  private ReportCategoryRepository reportCategoryRepository;
 
   @Override
   JasperTemplateRepository getRepository() {
@@ -42,9 +49,21 @@ public class JasperTemplateRepositoryIntegrationTest extends
 
   @Override
   protected JasperTemplate generateInstance() {
+    ReportCategory category = new ReportCategory();
+    category.setName(CATEGORY_NAME + getNextCategoryNumber());
+    ReportCategory savedCategory = reportCategoryRepository.save(category);
+
     JasperTemplate jasperTemplate = new JasperTemplate();
     jasperTemplate.setName(NAME + getNextInstanceNumber());
+    jasperTemplate.setCategory(savedCategory);
+
     return jasperTemplate;
+  }
+
+  @BeforeEach
+  public void setUp() {
+    jasperTemplateRepository.deleteAll();
+    reportCategoryRepository.deleteAll();
   }
 
   @Test

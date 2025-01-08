@@ -27,4 +27,6 @@ public interface JasperTemplateRepository
   JasperTemplate findByName(@Param("name") String name);
 
   List<JasperTemplate> findByVisible(boolean visible);
+
+  boolean existsByCategory_Id(UUID categoryId);
 }
