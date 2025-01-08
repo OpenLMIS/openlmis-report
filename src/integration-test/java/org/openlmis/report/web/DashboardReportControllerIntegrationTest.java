@@ -204,7 +204,7 @@ public class DashboardReportControllerIntegrationTest
     DashboardReport createdReport = new DashboardReport();
     createdReport.updateFrom(dto);
 
-    when(dashboardReportRepository.findByName(dto.getName())).thenReturn(Optional.empty());
+    when(dashboardReportRepository.existsByName(dto.getName())).thenReturn(false);
     when(dashboardReportRepository.save(any(DashboardReport.class))).thenReturn(createdReport);
 
     // When & Then
@@ -230,7 +230,7 @@ public class DashboardReportControllerIntegrationTest
     assertEquals(dto.getCategory().getName(), response.getCategory().getName());
 
     verify(reportCategoryRepository).findById(reportCategory.getId());
-    verify(dashboardReportRepository).findByName(dto.getName());
+    verify(dashboardReportRepository).existsByName(dto.getName());
     verify(dashboardReportRepository).save(any(DashboardReport.class));
     verify(rightReferenceDataService).save(any(RightDto.class));
   }
@@ -247,8 +247,7 @@ public class DashboardReportControllerIntegrationTest
     dto.setCategory(reportCategory);
     dto.setRightName((dto.getName() + RIGHT).toUpperCase());
 
-    when(dashboardReportRepository.findByName(dto.getName()))
-        .thenReturn(Optional.of(new DashboardReport()));
+    when(dashboardReportRepository.existsByName(dto.getName())).thenReturn(true);
 
     // When & Then
     restAssured.given()
@@ -261,7 +260,7 @@ public class DashboardReportControllerIntegrationTest
         .statusCode(HttpStatus.BAD_REQUEST.value());
 
     // Verify
-    verify(dashboardReportRepository).findByName(dto.getName());
+    verify(dashboardReportRepository).existsByName(dto.getName());
     verify(dashboardReportRepository, never()).save(any(DashboardReport.class));
   }
 

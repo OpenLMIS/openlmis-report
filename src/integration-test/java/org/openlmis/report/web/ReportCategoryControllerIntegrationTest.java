@@ -87,9 +87,10 @@ public class ReportCategoryControllerIntegrationTest
     updatedCategory.setId(reportCategoryId);
     updatedCategory.setName(updatedDto.getName());
 
+    when(reportCategoryRepository.existsByIdIsNotAndName(
+        reportCategoryId, updatedDto.getName())).thenReturn(false);
     when(reportCategoryRepository.findById(reportCategoryId)).thenReturn(
         Optional.of(reportCategory));
-    when(reportCategoryRepository.findByName(updatedDto.getName())).thenReturn(Optional.empty());
     when(reportCategoryRepository.save(any(ReportCategory.class))).thenReturn(updatedCategory);
 
     // When & Then
@@ -108,8 +109,9 @@ public class ReportCategoryControllerIntegrationTest
     assertEquals(response.getId(), updatedDto.getId());
     assertEquals(response.getName(), updatedDto.getName());
 
+    verify(reportCategoryRepository).existsByIdIsNotAndName(
+        reportCategoryId, updatedDto.getName());
     verify(reportCategoryRepository).findById(reportCategoryId);
-    verify(reportCategoryRepository).findByName(updatedDto.getName());
     verify(reportCategoryRepository).save(any(ReportCategory.class));
   }
 

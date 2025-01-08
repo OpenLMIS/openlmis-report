@@ -76,12 +76,10 @@ public class DashboardReportRepositoryIntegrationTest extends
 
   @Test
   public void shouldFindDashboardReportByName() {
-    dashboardReportRepository.save(generateInstance());
+    DashboardReport dashboardReport = dashboardReportRepository.save(generateInstance());
+    boolean exists = dashboardReportRepository.existsByName(dashboardReport.getName());
 
-    Optional<DashboardReport> foundReport = dashboardReportRepository.findByName(NAME);
-
-    assertThat(foundReport.isPresent(), is(true));
-    assertThat(foundReport.get().getName(), is(NAME));
+    assertThat(exists, is(true));
   }
 
   @Test
@@ -186,10 +184,10 @@ public class DashboardReportRepositoryIntegrationTest extends
 
   @Test
   public void shouldNotFindNonExistentDashboardReportByName() {
-    Optional<DashboardReport> foundReport = dashboardReportRepository
-        .findByName("Non-Existent name");
+    boolean exists = dashboardReportRepository
+        .existsByName("Non-Existent name");
 
-    assertThat(foundReport.isPresent(), is(false));
+    assertThat(exists, is(false));
   }
 
   @Test

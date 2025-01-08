@@ -242,42 +242,11 @@ public abstract class BaseCommunicationService<T> {
         ex.getResponseBodyAsString());
   }
 
-  protected <P> ResponseEntity<P> runWithTokenRetry(HttpTask<P> task) {
-    try {
-      return task.run();
-    } catch (HttpStatusCodeException ex) {
-      if (HttpStatus.UNAUTHORIZED == ex.getStatusCode()) {
-        // the token has (most likely) expired - clear the cache and retry once
-        authorizationService.clearTokenCache();
-        return task.run();
-      }
-      throw ex;
-    }
-  }
-
-  protected <P> void runWithRetryAndTokenRetry(HttpTask<P> task) {
+  protected <P> void runWithTokenRetry(HttpTask<P> task) {
     try {
       task.run();
     } catch (HttpStatusCodeException ex) {
       if (HttpStatus.UNAUTHORIZED == ex.getStatusCode()) {
-        // the token has (most likely) expired - clear the cache and retry once
-        authorizationService.clearTokenCache();
-        runWithRetry(task);
-        return;
-      }
-      if (ex.getStatusCode().is4xxClientError() || ex.getStatusCode().is5xxServerError()) {
-        runWithTokenRetry(task);
-        return;
-      }
-      throw ex;
-    }
-  }
-
-  private <P> void runWithRetry(HttpTask<P> task) {
-    try {
-      task.run();
-    } catch (HttpStatusCodeException ex) {
-      if (ex.getStatusCode().is4xxClientError() || ex.getStatusCode().is5xxServerError()) {
         task.run();
         return;
       }
@@ -287,6 +256,6 @@ public abstract class BaseCommunicationService<T> {
 
   @FunctionalInterface
   protected interface HttpTask<T> {
-    ResponseEntity<T> run();
+    void run();
   }
 }

@@ -92,11 +92,11 @@ public class ReportCategoryService {
   public ReportCategoryDto createReportCategory(ReportCategoryDto dto) {
     permissionService.canManageReportCategories();
 
-    reportCategoryRepository.findByName(dto.getName())
-        .ifPresent(existingCategory -> {
-          throw new ValidationMessageException(new Message(
-              ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NAME_DUPLICATED, dto.getName()));
-        });
+    boolean categoryExists = reportCategoryRepository.existsByName(dto.getName());
+    if (categoryExists) {
+      throw new ValidationMessageException(new Message(
+          ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NAME_DUPLICATED, dto.getName()));
+    }
 
     ReportCategory reportCategoryToSave = ReportCategory.newInstance(dto);
     ReportCategory savedCategory = reportCategoryRepository.save(reportCategoryToSave);
@@ -118,22 +118,18 @@ public class ReportCategoryService {
           ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_ID_MISMATCH));
     }
 
+    boolean nameAlreadyExists = reportCategoryRepository.existsByIdIsNotAndName(id, dto.getName());
+    if (nameAlreadyExists) {
+      throw new ValidationMessageException(
+        new Message(ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NAME_DUPLICATED));
+    }
+
     ReportCategory existingCategory = reportCategoryRepository.findById(id)
         .orElseThrow(() -> new NotFoundMessageException(
-            ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NOT_FOUND));
-
-    reportCategoryRepository.findByName(dto.getName())
-        .filter(category -> !category.getId().equals(existingCategory.getId()))
-        .ifPresent(existingCategoryWithName -> {
-          throw new ValidationMessageException(
-            new Message(ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NAME_DUPLICATED));
-        });
+            new Message(ReportCategoryMessageKeys.ERROR_REPORT_CATEGORY_NOT_FOUND, id)));
 
     existingCategory.updateFrom(dto);
-
-    ReportCategory updatedCategory = reportCategoryRepository.save(existingCategory);
-
-    return ReportCategoryDto.newInstance(updatedCategory);
+    return ReportCategoryDto.newInstance(reportCategoryRepository.save(existingCategory));
   }
 
   /**
@@ -149,7 +145,7 @@ public class ReportCategoryService {
 
     if (isAssignedToReports || isAssignedToTemplates) {
       throw new ValidationMessageException(new Message(
-        ReportCategoryMessageKeys.ERROR_CATEGORY_ASSIGNED, categoryId));
+        ReportCategoryMessageKeys.ERROR_CATEGORY_ALREADY_ASSIGNED, categoryId));
     }
 
     ReportCategory reportCategory = reportCategoryRepository.findById(categoryId)

@@ -16,14 +16,14 @@
 package org.openlmis.report.i18n;
 
 public class DashboardReportMessageKeys extends MessageKeys {
-  private static final String ERROR = join(SERVICE_ERROR, "dashboardReport");
-  private static final String ID = "id";
-  private static final String MISMATCH = "mismatch";
   public static final String ERROR_DASHBOARD_REPORT_NAME_DUPLICATED =
-      join(ERROR, "name", "duplicated");
-  public static final String ERROR_DASHBOARD_REPORT_NOT_FOUND = join(ERROR, NOT_FOUND);
-  public static final String ERROR_DASHBOARD_REPORT_ID_MISMATCH = join(ERROR, ID, MISMATCH);
-  public static final String ERROR_COULD_NOT_SAVE_RIGHT = join(ERROR, "save", "right", "failed");
+      "report.error.dashboardReport.name.duplicated";
+  public static final String ERROR_DASHBOARD_REPORT_NOT_FOUND =
+      "report.error.dashboardReport.notFound";
+  public static final String ERROR_DASHBOARD_REPORT_ID_MISMATCH =
+      "report.error.dashboardReport.id.mismatch";
+  public static final String ERROR_COULD_NOT_SAVE_RIGHT =
+      "report.error.dashboardReport.save.right.failed";
   public static final String ERROR_COULD_NOT_DELETE_RIGHT =
-      join(ERROR, "delete", "right", "failed");
+      "report.error.dashboardReport.delete.right.failed";
 }

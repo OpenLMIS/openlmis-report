@@ -15,6 +15,7 @@
 
 package org.openlmis.report.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -34,9 +35,11 @@ import org.openlmis.report.repository.ReportCategoryRepository;
 import org.openlmis.report.service.referencedata.RightReferenceDataService;
 import org.openlmis.report.utils.Message;
 import org.openlmis.report.utils.Pagination;
+import org.openlmis.report.utils.PropertyKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -104,31 +107,25 @@ public class DashboardReportService {
       boolean showOnHomePage) {
     permissionService.canViewReports();
 
-    Page<DashboardReport> dashboardReports =
-        dashboardReportRepository.findByEnabled(true, pageable);
-
     List<String> accessibleRights = permissionService.filterRightsForUser(
-        dashboardReports.getContent().stream()
+        dashboardReportRepository.findByEnabled(true, pageable).getContent().stream()
             .map(DashboardReport::getRightName)
             .filter(Objects::nonNull)
             .collect(Collectors.toList())
     );
 
-    List<DashboardReportDto> filteredReports;
-    if (showOnHomePage) {
-      filteredReports = dashboardReports.getContent().stream()
-          .filter(report -> accessibleRights.contains(report.getRightName()))
-          .filter(DashboardReport::isShowOnHomePage)
-          .map(DashboardReportDto::newInstance)
-          .collect(Collectors.toList());
-    } else {
-      filteredReports = dashboardReports.getContent().stream()
-          .filter(report -> accessibleRights.contains(report.getRightName()))
-          .map(DashboardReportDto::newInstance)
-          .collect(Collectors.toList());
+    if (accessibleRights.isEmpty()) {
+      return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
-    return Pagination.getPage(filteredReports, pageable);
+    Page<DashboardReport> dashboardReports = dashboardReportRepository
+        .findByRightsAndShowOnHomePage(
+            accessibleRights,
+            showOnHomePage ? Boolean.TRUE : null,
+            pageable
+        );
+
+    return Pagination.getPage(dashboardReports.map(DashboardReportDto::newInstance), pageable);
   }
 
   /**
@@ -158,7 +155,7 @@ public class DashboardReportService {
   public DashboardReportDto createDashboardReport(DashboardReportDto dto) {
     permissionService.canManageReports();
 
-    boolean reportExists = dashboardReportRepository.findByName(dto.getName()).isPresent();
+    boolean reportExists = dashboardReportRepository.existsByName(dto.getName());
     if (reportExists) {
       throw new ValidationMessageException(new Message(
           DashboardReportMessageKeys.ERROR_DASHBOARD_REPORT_NAME_DUPLICATED, dto.getName()));
@@ -173,14 +170,16 @@ public class DashboardReportService {
 
     try {
       rightReferenceDataService.save(rightToSave);
-      return DashboardReportDto.newInstance(
-          saveDashboardReport(dashboardReportToCreate));
-    } catch (DataIntegrityViolationException ex) {
-      throw new ValidationMessageException(new Message(
-          DashboardReportMessageKeys.ERROR_DASHBOARD_REPORT_NAME_DUPLICATED, dto.getName()), ex);
     } catch (Exception ex) {
       throw new ValidationMessageException(new Message(
           DashboardReportMessageKeys.ERROR_COULD_NOT_SAVE_RIGHT), ex);
+    }
+
+    try {
+      return DashboardReportDto.newInstance(saveDashboardReport(dashboardReportToCreate));
+    } catch (DataIntegrityViolationException ex) {
+      throw new ValidationMessageException(new Message(
+          DashboardReportMessageKeys.ERROR_DASHBOARD_REPORT_NAME_DUPLICATED, dto.getName()), ex);
     }
   }
 
@@ -247,7 +246,12 @@ public class DashboardReportService {
    * @return New RightDto
    */
   private RightDto createRight(String dashboardReportName) {
-    String transformedName = dashboardReportName.trim().toUpperCase().replace(" ", "_") + "_RIGHT";
+    String transformedName = PropertyKeyUtil.transformToPropertyKey(dashboardReportName);
+
+    if (null == transformedName) {
+      throw new ValidationMessageException(new Message(
+        DashboardReportMessageKeys.ERROR_COULD_NOT_SAVE_RIGHT));
+    }
 
     RightDto rightToSave = new RightDto();
     rightToSave.setName(transformedName);

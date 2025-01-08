@@ -19,9 +19,12 @@ import java.util.Optional;
 import java.util.UUID;
 import org.openlmis.report.domain.ReportCategory;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
 
 public interface ReportCategoryRepository
     extends PagingAndSortingRepository<ReportCategory, UUID> {
-  Optional<ReportCategory> findByName(@Param("name") String name);
+  Optional<ReportCategory> findByName(String name);
+
+  boolean existsByName(String name);
+
+  boolean existsByIdIsNotAndName(UUID id, String name);
 }

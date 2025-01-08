@@ -65,11 +65,21 @@ public class RightReferenceDataService extends BaseReferenceDataService<RightDto
    * @param rightDto the RightDto to save
    */
   @SuppressWarnings("PMD.PreserveStackTrace")
+  public void find(RightDto rightDto) {
+
+  }
+
+  /**
+   * Save a new right by making a POST request to the referenced data service.
+   *
+   * @param rightDto the RightDto to save
+   */
+  @SuppressWarnings("PMD.PreserveStackTrace")
   public void save(RightDto rightDto) {
     String url = getServiceUrl() + getUrl();
 
     try {
-      runWithRetryAndTokenRetry(() ->
+      runWithTokenRetry(() ->
           restTemplate.exchange(
               createUri(url),
               HttpMethod.PUT,
@@ -92,7 +102,7 @@ public class RightReferenceDataService extends BaseReferenceDataService<RightDto
     String url = getServiceUrl() + getUrl() + "/" + rightId;
 
     try {
-      runWithRetryAndTokenRetry(() ->
+      runWithTokenRetry(() ->
           restTemplate.exchange(
               createUri(url),
               HttpMethod.DELETE,

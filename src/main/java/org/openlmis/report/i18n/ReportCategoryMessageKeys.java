@@ -15,16 +15,14 @@
 
 package org.openlmis.report.i18n;
 
-public class ReportCategoryMessageKeys extends ReportingMessageKeys {
-  private static final String ERROR = join(SERVICE_ERROR, "reportCategory");
-  private static final String NAME = join(SERVICE_ERROR, "name");
-  private static final String ID = "id";
-  private static final String MISMATCH = "mismatch";
-  private static final String DUPLICATED = join(SERVICE_ERROR, "duplicated");
+public class ReportCategoryMessageKeys extends MessageKeys {
   public static final String ERROR_REPORT_CATEGORY_NAME_DUPLICATED =
-      join(ERROR, NAME, DUPLICATED);
-  public static final String ERROR_REPORT_CATEGORY_NOT_FOUND = join(ERROR, NOT_FOUND);
-  public static final String ERROR_REPORT_CATEGORY_ID_MISMATCH = join(ERROR, ID, MISMATCH);
-  public static final String ERROR_CATEGORY_ASSIGNED = join(ERROR, "assigned");
+      "report.error.reportCategory.name.duplicated";
+  public static final String ERROR_REPORT_CATEGORY_NOT_FOUND =
+      "report.error.reportCategory.notFound";
+  public static final String ERROR_REPORT_CATEGORY_ID_MISMATCH =
+      "report.error.reportCategory.id.mismatch";
+  public static final String ERROR_CATEGORY_ALREADY_ASSIGNED =
+      "report.error.reportCategory.already.assigned";
 
 }
