@@ -105,7 +105,9 @@ public class DashboardReportService {
    */
   public Page<DashboardReportDto> getDashboardReportsForUser(Pageable pageable,
       boolean showOnHomePage) {
-    permissionService.canViewReports();
+    if (!showOnHomePage) {
+      permissionService.canViewReports();
+    }
 
     List<String> accessibleRights = permissionService.filterRightsForUser(
         dashboardReportRepository.findByEnabled(true, pageable).getContent().stream()
