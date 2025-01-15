@@ -1,5 +1,19 @@
-1.3.0 / wip
+1.3.0 / 2025.01.15
 =================
+
+Improvements:
+* Upgrade javers version to 5.13.2
+* Jasper Templates have now `categoryid` field, which allows grouping them
+
+New functionality:
+* [SELV3-752](https://openlmis.atlassian.net/browse/SELV3-752): Dashboard Reports Definition
+  * Allows permitted users to add, manage and view Dashboard reports (currently PowerBI and Superset)
+  * Both Dashboard and Jasper Reports are grouped now by Report Categories
+  * Requires rights, which were added in the [referencedata service 15.2.9](https://github.com/OpenLMIS/openlmis-referencedata/tree/rel-15.2.9)
+      * `/api/reports/dashboardReports`
+        * `GET /{id}`, `GET`, `GET /availableReports`, `DELETE /{id}`, `POST`, `PUT /{id}`
+      * `/api/reports/reportCategories`
+        * `GET /{id}`, `GET`, `POST`, `PUT /{id}`, `DELETE`
 
 1.2.3 / 2024-10-31
 =================
