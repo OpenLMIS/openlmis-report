@@ -23,14 +23,14 @@ wget https://raw.githubusercontent.com/OpenLMIS/openlmis-ref-distro/master/setti
 && sed -i -e "s/^spring_profiles_active=demo-data,refresh-db/spring_profiles_active=/" .env \
 && wget https://raw.githubusercontent.com/OpenLMIS/openlmis-report/master/docker-compose.erd-generation.yml -O docker-compose.yml \
 && (/usr/local/bin/docker-compose up &) \
-&& sleep 90 \
+&& sleep 180 \
 && sudo rm /var/www/html/erd-report/* -rf \
 && sudo rm -rf output \
 && mkdir output \
 && chmod 777 output \
 && export COMPOSE_PROJECT_NAME_LOWER_CASE=`echo "$COMPOSE_PROJECT_NAME" | tr '[:upper:]' '[:lower:]'` \
 && (docker run --rm --network ${COMPOSE_PROJECT_NAME_LOWER_CASE//.}_default -v $WORKSPACE/erd/output:/output schemaspy/schemaspy:snapshot -t pgsql -host db -port 5432 -db open_lmis -s report -u postgres -p p@ssw0rd -I "(data_loaded)|(schema_version)|(jv_.*)" -norows -hq &) \
-&& sleep 30 \
+&& sleep 60 \
 && /usr/local/bin/docker-compose down --volumes \
 && sudo chown -R $USER:$USER output \
 && mv output/* /var/www/html/erd-report \
