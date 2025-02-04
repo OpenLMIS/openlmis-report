@@ -26,7 +26,7 @@ public class JasperXlsxExporter implements JasperExporter {
 
   private final JasperPrint jasperPrint;
 
-  JasperXlsxExporter(JasperPrint jasperPrint) {
+  public JasperXlsxExporter(JasperPrint jasperPrint) {
     this.jasperPrint = jasperPrint;
   }
 
@@ -34,7 +34,6 @@ public class JasperXlsxExporter implements JasperExporter {
   public byte[] exportReport() throws JRException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     JRXlsxExporter exporter = new JRXlsxExporter();
-
     exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
     exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
     exporter.exportReport();

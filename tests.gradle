@@ -16,6 +16,8 @@ test {
 }
 
 jacocoTestReport {
+    dependsOn test
+
     group = "reporting"
     description = "Generate Jacoco coverage reports after running tests."
     reports {

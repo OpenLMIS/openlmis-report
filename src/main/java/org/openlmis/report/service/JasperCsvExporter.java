@@ -24,7 +24,7 @@ import net.sf.jasperreports.export.SimpleWriterExporterOutput;
 
 public class JasperCsvExporter implements JasperExporter {
 
-  private JasperPrint jasperPrint;
+  private final JasperPrint jasperPrint;
   
   JasperCsvExporter(JasperPrint jasperPrint) {
     this.jasperPrint = jasperPrint;
