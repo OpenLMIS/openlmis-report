@@ -24,7 +24,7 @@ import net.sf.jasperreports.export.SimpleHtmlExporterOutput;
 
 public class JasperHtmlExporter implements JasperExporter {
 
-  private JasperPrint jasperPrint;
+  private final JasperPrint jasperPrint;
 
   JasperHtmlExporter(JasperPrint jasperPrint) {
     this.jasperPrint = jasperPrint;

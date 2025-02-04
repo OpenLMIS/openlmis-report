@@ -15,29 +15,15 @@
 
 package org.openlmis.report.service;
 
-import java.io.ByteArrayOutputStream;
+public class JasperCsvExporterTest extends BaseJasperExporterTest {
 
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
-import net.sf.jasperreports.export.SimpleExporterInput;
-import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
-
-public class JasperPdfExporter implements JasperExporter {
-
-  private final JasperPrint jasperPrint;
-
-  JasperPdfExporter(JasperPrint jasperPrint) {
-    this.jasperPrint = jasperPrint;
+  @Override
+  protected JasperExporter getExporter() {
+    return new JasperCsvExporter(jasperPrint);
   }
 
   @Override
-  public byte[] exportReport() throws JRException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    JRPdfExporter exporter = new JRPdfExporter();
-    exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-    exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
-    exporter.exportReport();
-    return baos.toByteArray();
+  protected String getReportFormat() {
+    return "csv";
   }
 }

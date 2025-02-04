@@ -71,6 +71,7 @@ public class JasperReportsViewServiceIntegrationTest {
     service.getJasperReportsView(template, getParamsWithFormat("csv"));
     service.getJasperReportsView(template, getParamsWithFormat("xls"));
     service.getJasperReportsView(template, getParamsWithFormat("html"));
+    service.getJasperReportsView(template, getParamsWithFormat("xlsx"));
   }
 
   @Test(expected = JasperReportViewException.class)

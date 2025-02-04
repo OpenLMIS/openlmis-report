@@ -1,5 +1,7 @@
 1.4.0 / wip
 =================
+Improvements:
+* [OLMIS-8075](https://openlmis.atlassian.net/browse/OLMIS-8075): Support XLSX report generation
 
 1.3.0 / 2025.01.15
 =================

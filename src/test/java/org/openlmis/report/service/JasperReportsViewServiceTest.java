@@ -59,6 +59,9 @@ public class JasperReportsViewServiceTest {
   private JasperXlsExporter jasperXlsExporter;
 
   @Mock
+  private JasperXlsxExporter jasperXlsxExporter;
+
+  @Mock
   private JasperHtmlExporter jasperHtmlExporter;
 
   @Mock
@@ -111,6 +114,12 @@ public class JasperReportsViewServiceTest {
     verify(jasperHtmlExporter, times(1)).exportReport();
   }
 
+  @Test
+  public void shouldSelectXlsxExporterForXlsxFormat() throws Exception {
+    viewService.getJasperReportsView(jasperTemplate, getParamsWithFormat("xlsx"));
+    verify(jasperXlsxExporter, times(1)).exportReport();
+  }
+
   @Test(expected = JasperReportViewException.class)
   public void shouldThrowJasperReportViewExceptionWhenConnectionCantBeOpen() throws Exception {
     when(replicationDataSource.getConnection()).thenThrow(new SQLException());
@@ -128,5 +137,6 @@ public class JasperReportsViewServiceTest {
     whenNew(JasperXlsExporter.class).withAnyArguments().thenReturn(jasperXlsExporter);
     whenNew(JasperHtmlExporter.class).withAnyArguments().thenReturn(jasperHtmlExporter);
     whenNew(JasperPdfExporter.class).withAnyArguments().thenReturn(jasperPdfExporter);
+    whenNew(JasperXlsxExporter.class).withAnyArguments().thenReturn(jasperXlsxExporter);
   }
 }

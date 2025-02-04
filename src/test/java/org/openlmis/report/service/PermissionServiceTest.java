@@ -15,12 +15,18 @@
 
 package org.openlmis.report.service;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
+import static org.openlmis.report.service.PermissionService.REPORTS_MANAGE;
 import static org.openlmis.report.service.PermissionService.REPORTS_VIEW;
+import static org.openlmis.report.service.PermissionService.REPORT_CATEGORIES_MANAGE;
 import static org.openlmis.report.service.PermissionService.REPORT_TEMPLATES_EDIT;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,6 +103,91 @@ public class PermissionServiceTest {
 
     // when
     permissionService.canEditReportTemplates();
+  }
+
+  @Test(expected = PermissionMessageException.class)
+  public void shouldRejectWhenUserDoesNotHaveManageReportCategoriesRight() {
+    // given
+    UserDto user = mockUserLoggedIn();
+    RightDto right = mockRightFound(REPORT_CATEGORIES_MANAGE);
+    mockUserDoesNotHaveRight(user, right);
+
+    // when
+    permissionService.canManageReportCategories();
+  }
+
+  @Test
+  public void shouldNotRejectWhenUserHasManageReportCategoriesRight() {
+    // given
+    UserDto user = mockUserLoggedIn();
+    RightDto right = mockRightFound(REPORT_CATEGORIES_MANAGE);
+    mockUserHasRight(user, right);
+
+    // when
+    permissionService.canManageReportCategories();
+
+    // then
+    verify(userReferenceDataService, atLeastOnce())
+        .hasRight(user.getId(), right.getId());
+  }
+
+  @Test(expected = PermissionMessageException.class)
+  public void shouldRejectWhenUserDoesNotHaveManageReportsRight() {
+    // given
+    UserDto user = mockUserLoggedIn();
+    RightDto right = mockRightFound(REPORTS_MANAGE);
+    mockUserDoesNotHaveRight(user, right);
+
+    // when
+    permissionService.canManageReports();
+  }
+
+  @Test
+  public void shouldNotRejectWhenUserHasManageReportsRight() {
+    // given
+    UserDto user = mockUserLoggedIn();
+    RightDto right = mockRightFound(REPORTS_MANAGE);
+    mockUserHasRight(user, right);
+
+    // when
+    permissionService.canManageReports();
+
+    // then
+    verify(userReferenceDataService, atLeastOnce())
+        .hasRight(user.getId(), right.getId());
+  }
+
+  @Test
+  public void shouldReturnPermissionsForUser() {
+    // given
+    UserDto user = mockUserLoggedIn();
+    RightDto manageReportsRight = mockRightFound(REPORTS_MANAGE);
+    RightDto manageCategoriesRight = mockRightFound(REPORT_CATEGORIES_MANAGE);
+    RightDto viewRight = mockRightFound(REPORTS_VIEW);
+
+    mockUserHasRight(user, manageReportsRight);
+    mockUserHasRight(user, manageCategoriesRight);
+    mockUserDoesNotHaveRight(user, viewRight);
+
+    List<String> rightsToValidate = new ArrayList<>();
+    rightsToValidate.add(REPORTS_MANAGE);
+    rightsToValidate.add(REPORT_CATEGORIES_MANAGE);
+    rightsToValidate.add(REPORTS_VIEW);
+
+    // when
+    List<String> returnedRights = permissionService.filterRightsForUser(rightsToValidate);
+
+    // then
+    assertTrue(returnedRights.contains(REPORTS_MANAGE));
+    assertTrue(returnedRights.contains(REPORT_CATEGORIES_MANAGE));
+    assertFalse(returnedRights.contains(REPORTS_VIEW));
+
+    verify(userReferenceDataService, atLeastOnce())
+        .hasRight(user.getId(), manageReportsRight.getId());
+    verify(userReferenceDataService, atLeastOnce())
+        .hasRight(user.getId(), manageCategoriesRight.getId());
+    verify(userReferenceDataService, atLeastOnce())
+        .hasRight(user.getId(), viewRight.getId());
   }
 
   @Test

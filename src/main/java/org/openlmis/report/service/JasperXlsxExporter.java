@@ -16,25 +16,24 @@
 package org.openlmis.report.service;
 
 import java.io.ByteArrayOutputStream;
-
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 
-public class JasperPdfExporter implements JasperExporter {
+public class JasperXlsxExporter implements JasperExporter {
 
   private final JasperPrint jasperPrint;
 
-  JasperPdfExporter(JasperPrint jasperPrint) {
+  public JasperXlsxExporter(JasperPrint jasperPrint) {
     this.jasperPrint = jasperPrint;
   }
 
   @Override
   public byte[] exportReport() throws JRException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    JRPdfExporter exporter = new JRPdfExporter();
+    JRXlsxExporter exporter = new JRXlsxExporter();
     exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
     exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
     exporter.exportReport();
