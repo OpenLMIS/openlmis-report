@@ -34,12 +34,14 @@ import org.mockito.MockitoAnnotations;
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.ReportCategory;
 import org.openlmis.report.dto.JasperTemplateDto;
+import org.openlmis.report.dto.external.referencedata.UserDto;
 import org.openlmis.report.exception.JasperReportViewException;
 import org.openlmis.report.exception.NotFoundMessageException;
 import org.openlmis.report.repository.JasperTemplateRepository;
 import org.openlmis.report.service.JasperReportsViewService;
 import org.openlmis.report.service.JasperTemplateService;
 import org.openlmis.report.service.PermissionService;
+import org.openlmis.report.utils.AuthenticationHelper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -60,6 +62,9 @@ public class JasperTemplateControllerTest {
 
   @Mock
   private JasperTemplateRepository jasperTemplateRepository;
+
+  @Mock
+  private AuthenticationHelper authenticationHelper;
 
   @InjectMocks
   private JasperTemplateController jasperTemplateController;
@@ -104,6 +109,9 @@ public class JasperTemplateControllerTest {
     doNothing().when(permissionService).canViewReports();
     doNothing().when(permissionService).validatePermissions();
 
+    UserDto currentUser = new UserDto();
+    currentUser.setId(UUID.randomUUID());
+
     when(jasperTemplateService.mapReportImagesToTemplate(any())).thenReturn(new HashMap<>());
     when(jasperTemplateService.mapRequestParametersToTemplate(any(), any()))
         .thenReturn(new HashMap<>());
@@ -111,6 +119,8 @@ public class JasperTemplateControllerTest {
         .thenReturn(Optional.of(jasperTemplate));
     when(jasperReportsViewService.getJasperReportsView(any(), any()))
         .thenReturn(new byte[] {0, 1, 2, 3, 4});
+    when(authenticationHelper.getCurrentUser())
+        .thenReturn(currentUser);
 
     MockHttpServletRequest request = new MockHttpServletRequest();
     ResponseEntity<byte[]> response = jasperTemplateController.generateReport(request,
