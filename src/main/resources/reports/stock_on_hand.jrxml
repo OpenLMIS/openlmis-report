@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CoreStockOnHand" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" uuid="1fd4208c-6840-4925-a1f6-5770e8fb3e97">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="OpenLMIS Core UAT"/>
 	<property name="net.sf.jasperreports.export.xlsx.exclude.origin.band.1" value="pageHeader"/>
 	<property name="net.sf.jasperreports.export.xlsx.exclude.origin.band.2" value="pageFooter"/>
 	<property name="net.sf.jasperreports.export.xlsx.exclude.origin.keep.first.band.1" value="columnHeader"/>
@@ -54,6 +53,9 @@
 		<property name="displayName" value="Program"/>
 		<property name="required" value="false"/>
 	</parameter>
+	<parameter name="userId" class="java.lang.String">
+		<property name="displayName" value="Delete from template parameters"/>
+	</parameter>
 	<queryString>
 		<![CDATA[WITH RECURSIVE findChildZones AS (
   SELECT * FROM referencedata.geographic_zones WHERE name = $P{geographicZone}::varchar
@@ -66,9 +68,14 @@ latest_orderable_identifiers AS (
   FROM referencedata.orderable_identifiers
   WHERE "key" = 'tradeItem'
   ORDER BY orderableid, orderableversionnumber DESC
+),
+user_rights as (
+  select facilityid, programid, userid from referencedata.right_assignments ra 
+  where ra.rightname = 'STOCK_CARDS_VIEW' and ra.userId = $P{userId}::uuid
 )
 SELECT
   soh_data.facilityName AS facilityName,
+  soh_data.facilityId AS facilitId,
   soh_data.productId AS productId,
   soh_data.productName AS productName,
   soh_data.productLotCode AS productLotCode,
@@ -91,6 +98,7 @@ FROM (
     lots.expirationdate AS productExpiryDate,
     soh.stockonhand AS stockonhand,
     facilities."name" AS facilityName,
+    facilities.id as facilityId,
     soh.occurreddate AS lastUpdated,
     products.netcontent AS netContent,
     stock_cards.programid AS programId,
@@ -151,7 +159,8 @@ FROM (
     stock_cards.orderableid,
     stock_cards.id,
     facilities_types.name,
-    stock_cards.programid
+    stock_cards.programid,
+    facilities.id
 ) AS soh_data
 LEFT JOIN latest_orderable_identifiers AS orderable_identifiers ON soh_data.orderableid = orderable_identifiers.orderableid
 LEFT JOIN referencedata.trade_items AS trade_items ON orderable_identifiers.value = trade_items.id::varchar
@@ -162,6 +171,9 @@ LEFT JOIN (
   ORDER BY stockcardid, occurreddate DESC
 ) AS vialStage ON soh_data.stock_card_id = vialStage.stockcardid
 LEFT JOIN referencedata.programs AS programs ON soh_data.programId = programs.id
+JOIN user_rights ur
+    ON soh_data.programid = ur.programid
+    and soh_data.facilityid = ur.facilityid 
 WHERE
   soh_data.product_version_rank = 1
   AND (programs.name = $P{program} OR $P{program} IS NULL)
@@ -179,7 +191,8 @@ GROUP BY
   soh_data.district,
   soh_data.facilityType,
   soh_data.programId,
-  programs.name;]]>
+  programs.name,
+  soh_data.facilityid;]]>
 	</queryString>
 	<field name="facilityName" class="java.lang.String"/>
 	<field name="productId" class="java.lang.String"/>
