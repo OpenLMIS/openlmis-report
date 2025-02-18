@@ -41,153 +41,255 @@
 		<property name="required" value="false"/>
 	</parameter>
 	<queryString>
-		<![CDATA[WITH latest_orderable_identifiers AS (
-            SELECT DISTINCT ON (orderableid)
-                orderableid,
-                value,
-                orderableversionnumber
-            FROM referencedata.orderable_identifiers
-            WHERE "key" = 'tradeItem'
-            ORDER BY orderableid, orderableversionnumber DESC
-        ),
-        vial_stage AS (
-            SELECT DISTINCT ON (stockcardid)
-                stockcardid,
-                extradata
-            FROM stockmanagement.stock_card_line_items
-            WHERE occurreddate BETWEEN $P{startDate}::date AND $P{endDate}::date
-            ORDER BY stockcardid, occurreddate DESC
-        ),
-        user_rights AS (
-            SELECT
-                facilityid,
-                programid,
-                userid
-            FROM referencedata.right_assignments AS right_assignments
-            WHERE right_assignments.rightname = 'STOCK_CARDS_VIEW'
-              AND right_assignments.userId = $P{userId}::uuid
-        ),
-        stock_data AS (
-            SELECT
-                o.fullproductname,
-                COALESCE(l.lotcode, 'NO_LOT') AS lotcode,
-                csoh.stockonhand,
-                csoh.occurreddate
-            FROM stockmanagement.calculated_stocks_on_hand csoh
-            JOIN stockmanagement.stock_cards sc ON csoh.stockcardid = sc.id
-            JOIN referencedata.facilities f ON f.id = sc.facilityid
-            JOIN referencedata.orderables o ON o.id = sc.orderableid
-            JOIN referencedata.programs p ON p.id = sc.programid
-            JOIN user_rights AS user_rights ON p.id = user_rights.programid
-              AND f.id = user_rights.facilityid
-            LEFT JOIN referencedata.lots l ON l.id = sc.lotid
-            WHERE (f.name = $P{facility} OR $P{facility} IS NULL)
-              AND (o.fullproductname = $P{product} OR $P{product} IS NULL)
-              AND (p.name = $P{program} OR $P{program} IS NULL)
-        ),
-        closest_to_start AS (
-            SELECT
-                fullproductname,
-                lotcode,
-                stockonhand,
-                occurreddate,
-                ROW_NUMBER() OVER (
-                    PARTITION BY fullproductname, lotcode
-                    ORDER BY occurreddate DESC
-                ) AS rank_within_lot
-            FROM stock_data
-            WHERE occurreddate < $P{startDate}::date
-        ),
-        opening_total_stock AS (
-            SELECT
-                fullproductname,
-                lotcode,
-                SUM(stockonhand) AS opening_total_stock
-            FROM closest_to_start
-            WHERE rank_within_lot = 1
-            GROUP BY fullproductname, lotcode
-        ),
-        closest_to_end AS (
-            SELECT
-                fullproductname,
-                lotcode,
-                stockonhand,
-                occurreddate,
-                ROW_NUMBER() OVER (
-                    PARTITION BY fullproductname, lotcode
-                    ORDER BY occurreddate DESC
-                ) AS rank_within_lot
-            FROM stock_data
-            WHERE occurreddate <= $P{endDate}::date
-        ),
-        closing_total_stock AS (
-            SELECT
-                fullproductname,
-                lotcode,
-                SUM(stockonhand) AS closing_total_stock
-            FROM closest_to_end
-            WHERE rank_within_lot = 1
-            GROUP BY fullproductname, lotcode
-        ),
-        balance_stock AS (
-            SELECT
-                COALESCE((SELECT SUM(opening_total_stock) FROM opening_total_stock), 0) AS opening_soh,
-                COALESCE((SELECT SUM(closing_total_stock) FROM closing_total_stock), 0) AS closing_soh
-        )
-        SELECT
-            facilities.name AS facilityName,
-            products.fullproductname AS productName,
-            products.code AS productCode,
-            COALESCE(lots.lotcode, 'NO_LOT') AS productLotCode,
-            lots.expirationdate AS productExpiryDate,
-            stock_card_line_items.occurreddate AS issueDate,
-            stock_card_line_items.quantity AS quantity,
-            COALESCE(trade_items.manufactureroftradeitem, 'NO_DATA') AS manufacturer,
-            COALESCE(vial_stage.extradata->>'vvmStatus', 'NO_DATA') AS vialStage,
-            programs.name AS programName,
-            COALESCE(stock_card_line_items_reasons.name, 'NO_DATA') AS reasonName,
-            COALESCE(receiving_facilities.name, 'NO_DATA') AS receivingFacilityName,
-            balance_stock.opening_soh AS openingSoh,
-            balance_stock.closing_soh AS closingSoh
-        FROM stockmanagement.stock_card_line_items AS stock_card_line_items
-        JOIN stockmanagement.stock_cards AS stock_cards ON stock_cards.id = stock_card_line_items.stockcardid
-        JOIN referencedata.facilities AS facilities ON facilities.id = stock_cards.facilityid
-        JOIN referencedata.orderables AS products ON products.id = stock_cards.orderableid
-        JOIN referencedata.programs AS programs ON stock_cards.programid = programs.id
-        JOIN user_rights AS user_rights ON programs.id = user_rights.programid
-          AND facilities.id = user_rights.facilityid
-        LEFT JOIN referencedata.lots AS lots ON lots.id = stock_cards.lotid
-        LEFT JOIN latest_orderable_identifiers AS orderable_identifiers ON 
-            products.id = orderable_identifiers.orderableid
-            AND products.versionnumber = orderable_identifiers.orderableversionnumber
-        LEFT JOIN referencedata.trade_items AS trade_items ON trade_items.id = lots.tradeitemid
-        LEFT JOIN vial_stage ON stock_cards.id = vial_stage.stockcardid
-        LEFT JOIN stockmanagement.stock_card_line_item_reasons AS stock_card_line_items_reasons ON 
-            stock_card_line_items.reasonid = stock_card_line_items_reasons.id
-        LEFT JOIN stockmanagement.nodes AS destination_nodes ON 
-            stock_card_line_items.destinationid = destination_nodes.id
-        LEFT JOIN referencedata.facilities AS receiving_facilities ON 
-            destination_nodes.referenceid = receiving_facilities.id
-        CROSS JOIN balance_stock
-        WHERE (facilities.name = $P{facility} OR $P{facility} IS NULL)
-          AND (products.fullproductname = $P{product} OR $P{product} IS NULL)
-          AND (programs.name = $P{program} OR $P{program} IS NULL)
-          AND (
-              ($P{startDate} IS NOT NULL AND $P{endDate} IS NOT NULL AND 
-               stock_card_line_items.occurreddate BETWEEN $P{startDate}::date AND $P{endDate}::date)
-              OR ($P{startDate} IS NOT NULL AND $P{endDate} IS NULL AND 
-                  stock_card_line_items.occurreddate >= $P{startDate}::date)
-              OR ($P{startDate} IS NULL AND $P{endDate} IS NOT NULL AND 
-                  stock_card_line_items.occurreddate <= $P{endDate}::date)
-              OR ($P{startDate} IS NULL AND $P{endDate} IS NULL)
-          )
+		<![CDATA[WITH
+  latest_orderable_identifiers AS (
+    SELECT DISTINCT ON (orderableid)
+      orderableid,
+      value,
+      orderableversionnumber
+    FROM referencedata.orderable_identifiers
+    WHERE
+      "key" = 'tradeItem'
+    ORDER BY
+      orderableid,
+      orderableversionnumber DESC
+  ),
+  vial_stage AS (
+    SELECT DISTINCT ON (stockcardid)
+      stockcardid,
+      extradata
+    FROM stockmanagement.stock_card_line_items
+    WHERE
+      occurreddate BETWEEN $P{startDate}:: date AND $P{endDate}:: date
+    ORDER BY
+      stockcardid,
+      occurreddate DESC
+  ),
+  user_rights AS (
+    SELECT
+      facilityid,
+      programid,
+      userid
+    FROM referencedata.right_assignments AS right_assignments
+    WHERE
+      right_assignments.rightname = 'STOCK_CARDS_VIEW'
+      AND right_assignments.userId = $P{userId}:: uuid
+  ),
+  stock_data AS (
+    SELECT
+      o.fullproductname,
+      COALESCE(l.lotcode, 'NO_LOT') AS lotcode,
+      csoh.stockonhand,
+      csoh.occurreddate
+    FROM stockmanagement.calculated_stocks_on_hand csoh
+    JOIN stockmanagement.stock_cards sc ON csoh.stockcardid = sc.id
+    JOIN referencedata.facilities f ON f.id = sc.facilityid
+    JOIN referencedata.orderables o ON o.id = sc.orderableid
+    JOIN referencedata.programs p ON p.id = sc.programid
+    JOIN user_rights AS user_rights ON p.id = user_rights.programid
+    AND f.id = user_rights.facilityid
+    LEFT JOIN referencedata.lots l ON l.id = sc.lotid
+    WHERE
+      (f.name = $P{facility} OR $P{facility} IS NULL)
+      AND (o.fullproductname = $P{product} OR $P{product} IS NULL)
+      AND (p.name = $P{program} OR $P{program} IS NULL)
+  ),
+  closest_to_start AS (
+    SELECT
+      fullproductname,
+      lotcode,
+      stockonhand,
+      occurreddate,
+      ROW_NUMBER() OVER (
+        PARTITION BY
+          fullproductname,
+          lotcode
         ORDER BY
-            facilities.name,
-            products.fullproductname,
-            products.code,
-            lots.lotcode,
-            stock_card_line_items.occurreddate,
-            stock_card_line_items_reasons.name;]]>
+          occurreddate DESC
+      ) AS rank_within_lot
+    FROM stock_data
+    WHERE
+      occurreddate < $P{startDate}:: date
+  ),
+  opening_total_stock AS (
+    SELECT
+      fullproductname,
+      lotcode,
+      SUM(stockonhand) AS opening_total_stock
+    FROM closest_to_start
+    WHERE
+      rank_within_lot = 1
+    GROUP BY
+      fullproductname,
+      lotcode
+  ),
+  closest_to_end AS (
+    SELECT
+      fullproductname,
+      lotcode,
+      stockonhand,
+      occurreddate,
+      ROW_NUMBER() OVER (
+        PARTITION BY
+          fullproductname,
+          lotcode
+        ORDER BY
+          occurreddate DESC
+      ) AS rank_within_lot
+    FROM stock_data
+    WHERE
+      occurreddate <= $P{endDate}:: date
+  ),
+  closing_total_stock AS (
+    SELECT
+      fullproductname,
+      lotcode,
+      SUM(stockonhand) AS closing_total_stock
+    FROM closest_to_end
+    WHERE
+      rank_within_lot = 1
+    GROUP BY
+      fullproductname,
+      lotcode
+  ),
+  balance_stock AS (
+    SELECT
+      COALESCE(
+        (
+          SELECT
+            SUM(opening_total_stock)
+          FROM opening_total_stock
+        ),
+        0
+      ) AS opening_soh,
+      COALESCE(
+        (
+          SELECT
+            SUM(closing_total_stock)
+          FROM closing_total_stock
+        ),
+        0
+      ) AS closing_soh
+  ),
+  main_query AS (
+    SELECT
+      facilities.name AS facilityName,
+      products.fullproductname AS productName,
+      products.code AS productCode,
+      COALESCE(lots.lotcode, 'NO_LOT') AS productLotCode,
+      lots.expirationdate AS productExpiryDate,
+      stock_card_line_items.occurreddate AS issueDate,
+      stock_card_line_items.quantity AS quantity,
+      COALESCE(trade_items.manufactureroftradeitem, 'NO_DATA') AS manufacturer,
+      COALESCE(vial_stage.extradata ->> 'vvmStatus', 'NO_DATA') AS vialStage,
+      programs.name AS programName,
+      COALESCE(stock_card_line_items_reasons.name, 'NO_DATA') AS reasonName,
+      COALESCE(receiving_facilities.name, 'NO_DATA') AS receivingFacilityName,
+      balance_stock.opening_soh AS openingSoh,
+      balance_stock.closing_soh AS closingSoh
+    FROM stockmanagement.stock_card_line_items AS stock_card_line_items
+    JOIN stockmanagement.stock_cards AS stock_cards ON stock_cards.id =
+      stock_card_line_items.stockcardid
+    JOIN referencedata.facilities AS facilities ON facilities.id =
+      stock_cards.facilityid
+    JOIN referencedata.orderables AS products ON products.id =
+      stock_cards.orderableid
+    JOIN referencedata.programs AS programs ON stock_cards.programid =
+      programs.id
+    JOIN user_rights AS user_rights ON programs.id = user_rights.programid
+    AND facilities.id = user_rights.facilityid
+    LEFT JOIN referencedata.lots AS lots ON lots.id = stock_cards.lotid
+    LEFT JOIN latest_orderable_identifiers AS orderable_identifiers ON
+      products.id = orderable_identifiers.orderableid
+      AND products.versionnumber = orderable_identifiers.orderableversionnumber
+    LEFT JOIN referencedata.trade_items AS trade_items ON trade_items.id =
+      lots.tradeitemid
+    LEFT JOIN vial_stage ON stock_cards.id = vial_stage.stockcardid
+    LEFT JOIN stockmanagement.stock_card_line_item_reasons AS
+      stock_card_line_items_reasons ON stock_card_line_items.reasonid =
+      stock_card_line_items_reasons.id
+    LEFT JOIN stockmanagement.nodes AS destination_nodes ON
+      stock_card_line_items.destinationid = destination_nodes.id
+    LEFT JOIN referencedata.facilities AS receiving_facilities ON
+      destination_nodes.referenceid = receiving_facilities.id
+    LEFT JOIN balance_stock ON true
+    WHERE
+      (facilities.name = $P{facility} OR $P{facility} IS NULL)
+      AND (products.fullproductname = $P{product} OR $P{product} IS NULL)
+      AND (programs.name = $P{program} OR $P{program} IS NULL)
+      AND (
+        (
+          $P{startDate} IS NOT NULL
+          AND $P{endDate} IS NOT NULL
+          AND stock_card_line_items.occurreddate BETWEEN $P{startDate}:: date
+          AND $P{endDate}:: date
+        )
+        OR (
+          $P{startDate} IS NOT NULL
+          AND $P{endDate} IS NULL
+          AND stock_card_line_items.occurreddate >= $P{startDate}:: date
+        )
+        OR (
+          $P{startDate} IS NULL
+          AND $P{endDate} IS NOT NULL
+          AND stock_card_line_items.occurreddate <= $P{endDate}:: date
+        )
+        OR ($P{startDate} IS NULL AND $P{endDate} IS NULL)
+      )
+  	)
+	SELECT
+	  facilityName,
+	  productName,
+	  productCode,
+	  productLotCode,
+	  productExpiryDate,
+	  issueDate,
+	  quantity,
+	  manufacturer,
+	  vialStage,
+	  programName,
+	  reasonName,
+	  receivingFacilityName,
+	  openingSoh,
+	  closingSoh
+	FROM main_query
+	UNION ALL
+	SELECT
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  NULL,
+	  (
+	    SELECT
+	      opening_soh
+	    FROM balance_stock
+	  ),
+	  (
+	    SELECT
+	      closing_soh
+	    FROM balance_stock
+	  )
+	WHERE
+	  NOT EXISTS (
+	    SELECT
+	      1
+	    FROM main_query
+	  )
+	ORDER BY
+	  facilityName,
+	  productName,
+	  productCode,
+	  productLotCode,
+	  issueDate,
+	  reasonName;]]>
 	</queryString>
 	<field name="facilityName" class="java.lang.String"/>
 	<field name="productName" class="java.lang.String"/>
@@ -475,7 +577,7 @@
 	</columnHeader>
 	<detail>
 		<band height="46" splitType="Prevent">
-			<property name="com.jaspersoft.studio.layout"/>
+			<printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()!=0) && $F{issueDate} != null]]></printWhenExpression>
 			<rectangle>
 				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="801" height="45" backcolor="#F0F0F0" uuid="2de367b0-e3ff-42e2-b474-e9accdcd1c69"/>
 				<graphicElement>
@@ -607,12 +709,12 @@
 		<band height="52">
 			<staticText>
 				<reportElement positionType="FixRelativeToBottom" x="0" y="0" width="800" height="51" uuid="d5ac5426-34dd-41c4-acde-4510f82e3add">
-					<printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()==0)]]></printWhenExpression>
+					<printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()==0) || (new Boolean($V{REPORT_COUNT}.intValue()==1) && $F{issueDate} == null)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 				</textElement>
-				<text><![CDATA[There is no data for the indicated parameters.]]></text>
+				<text><![CDATA[No transactions have been recorded for the specified parameters.]]></text>
 			</staticText>
 		</band>
 	</summary>
