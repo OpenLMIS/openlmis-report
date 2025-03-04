@@ -23,8 +23,8 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.JasperTemplateParameter;
 import org.openlmis.report.domain.ReportCategory;
@@ -38,6 +38,9 @@ public class JasperTemplateRepositoryIntegrationTest extends
 
   @Autowired
   private JasperTemplateRepository jasperTemplateRepository;
+
+  @Autowired
+  private DashboardReportRepository dashboardReportRepository;
 
   @Autowired
   private ReportCategoryRepository reportCategoryRepository;
@@ -60,9 +63,10 @@ public class JasperTemplateRepositoryIntegrationTest extends
     return jasperTemplate;
   }
 
-  @BeforeEach
+  @Before
   public void setUp() {
     jasperTemplateRepository.deleteAll();
+    dashboardReportRepository.deleteAll();
     reportCategoryRepository.deleteAll();
   }
 
