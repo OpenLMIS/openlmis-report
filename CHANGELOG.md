@@ -2,6 +2,7 @@
 =================
 Improvements:
 * [OLMIS-8075](https://openlmis.atlassian.net/browse/OLMIS-8075): Support XLSX report generation
+* [OLMIS-8099](https://openlmis.atlassian.net/browse/OLMIS-8099): Added Superset reports to dashboard_reports table
 
 1.3.0 / 2025.01.15
 =================
