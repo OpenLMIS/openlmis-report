@@ -22,8 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.ReportCategory;
 import org.openlmis.report.utils.DashboardReportDataBuilder;
@@ -57,8 +58,9 @@ public class ReportCategoryRepositoryIntegrationTest extends
     return new ReportCategoryDataBuilder().withName(NAME).buildAsNew();
   }
 
-  @BeforeEach
+  @Before
   public void setUp() {
+    jasperTemplateRepository.deleteAll();
     dashboardReportRepository.deleteAll();
     reportCategoryRepository.deleteAll();
   }
@@ -74,11 +76,6 @@ public class ReportCategoryRepositoryIntegrationTest extends
 
   @Test
   public void shouldFindAllReportCategories() {
-    // Clear all the data
-    jasperTemplateRepository.deleteAll();
-    dashboardReportRepository.deleteAll();
-    reportCategoryRepository.deleteAll();
-
     ReportCategory reportCategory1 = reportCategoryRepository.save(
         new ReportCategoryDataBuilder().buildAsNew()
     );
