@@ -1,8 +1,13 @@
 1.4.0 / wip
 =================
+
 Improvements:
 * [OLMIS-8075](https://openlmis.atlassian.net/browse/OLMIS-8075): Support XLSX report generation
-* [OLMIS-8099](https://openlmis.atlassian.net/browse/OLMIS-8099): Added Superset reports to dashboard_reports table
+* [OLMIS-8099](https://openlmis.atlassian.net/browse/OLMIS-8099): Move Superset reports to dashboard_reports table
+
+New reports:
+* [OLMIS-8058](https://openlmis.atlassian.net/browse/OLMIS-8058): Point in time SOH summary report
+* [OLMIS-8059](https://openlmis.atlassian.net/browse/OLMIS-8059): Periodic SOH summary report
 
 1.3.0 / 2025.01.15
 =================
