@@ -1,7 +1,35 @@
-Upcoming Version (WIP)
+1.4.0-hotfix / 2025-04-04
 ==================
 
-1.4.0 / 2025-03-31
+* Removed the latest migration with adding default superset reports
+
+**Instruction how to add SUPERSET reports after migrating to core 3.19.1**
+
+* *Assign Rights*: Users with *administrator privileges* must assign the following rights to a role of type `Administration` (e.g., `System Administrator`):
+  * `reportCategoriesManage`
+  * `reportsManage`
+* *Refresh*: After assigning the rights, either refresh the page or *log out and log in* again.
+* *Add Superset Dashboard Report*:
+  * Navigate to `Administration` -> `Reports`.
+  * Click on `Add Dashboard Report`.
+  * Ensure the *Type* is set to `SUPERSET`.
+  * Provide the relevant *Superset URL* for the report:
+    * Example URLs:
+      * `https://superset-uat.openlmis.org/superset/dashboard/reporting_rate_and_timeliness`
+      * `https://superset-uat.openlmis.org/superset/dashboard/consumption`
+      * `https://superset-uat.openlmis.org/superset/dashboard/adjustments`
+      * `https://superset-uat.openlmis.org/superset/dashboard/stockouts`
+      * `https://superset-uat.openlmis.org/superset/dashboard/stock_status`
+      * `https://superset-uat.openlmis.org/superset/dashboard/orders`
+      * `https://superset-uat.openlmis.org/superset/dashboard/administrative`
+  * Provide other required fields.
+* *Assign Report Rights*:
+  * After creating the reports, go to `Administration` -> `Roles`.
+  * Automatically generated report rights will be created based on the report name.
+  * Assign these rights to the `REPORTS` type roles.
+* *Finalize*: Log out and log back in. Users with the previously edited role assigned should see reports under `Reports` -> `View Reports`.
+
+1.4.0 / 2025-03-31 - use 1.4.0-hotfix instead
 =================
 
 Improvements:
