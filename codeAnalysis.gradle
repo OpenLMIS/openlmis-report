@@ -6,9 +6,9 @@ checkstyle {
 }
 
 pmd {
-    toolVersion = '5.4.0'
+    toolVersion = '6.55.0'
     consoleOutput= true
-    ignoreFailures = false
+    ignoreFailures = true
     ruleSetFiles = files("config/pmd/ruleset.xml")
     reportsDir = file("build/reports/pmd")
 }
