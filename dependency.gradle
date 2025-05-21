@@ -25,7 +25,7 @@ dependencies {
     compile "org.apache.commons:commons-lang3"
     compile "org.flywaydb:flyway-core"
     compile 'org.javers:javers-spring-boot-starter-sql:5.13.2'
-    compile "org.postgresql:postgresql:42.0.0"
+    compile "org.postgresql:postgresql:42.6.2"
     compile 'org.webjars.npm:api-console:3.0.17'
 
     compile "org.apache.poi:poi:3.15"
