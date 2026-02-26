@@ -128,6 +128,13 @@ public class JasperTemplateControllerTest {
     assertTrue(response.getHeaders().toString().contains("name.xlsx"));
     assertTrue(response.getHeaders().toString().contains("Content-Type:\"application/"
         + "vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8\""));
+
+    request = new MockHttpServletRequest();
+    response = jasperTemplateController.generateReport(request,
+        jasperTemplate.getId(), "xlsx", null);
+    assertTrue(response.getHeaders().toString().contains("name.xlsx"));
+    assertTrue(response.getHeaders().toString().contains("Content-Type:\"application/"
+        + "vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8\""));
   }
 }
 

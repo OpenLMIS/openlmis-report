@@ -85,7 +85,7 @@ public class JasperTemplateService {
   static final String REPORT_TYPE_PROPERTY = "reportType";
   private static final String DEFAULT_REPORT_TYPE = "Consistency Report";
   private static final String[] ALLOWED_FILETYPES = {"jrxml"};
-  private static final String configPath = "/config/reports/";
+  private static final String CONFIG_PATH = "/config/reports/";
 
   @Autowired
   private JasperTemplateRepository jasperTemplateRepository;
@@ -229,7 +229,7 @@ public class JasperTemplateService {
       userLocale = Locale.ENGLISH;
     }
     Map<String, Object> parameters = new HashMap<>();
-    File resourceBundleDir = new File(configPath + "resourceBundles");
+    File resourceBundleDir = new File(CONFIG_PATH + "resourceBundles");
     if (resourceBundleDir.exists() && resourceBundleDir.isDirectory()) {
       URL[] urls = {resourceBundleDir.toURI().toURL()};
 
@@ -256,7 +256,7 @@ public class JasperTemplateService {
    * @throws IOException the io exception
    */
   public Map<String, Object> getMapSubreportGlobalHeaderParameters(JasperReport parentReport)
-      throws JRException, IOException, ReportingException {
+      throws JRException, IOException {
     // validate if report requires header or not
     boolean needsHeader = parentReport != null && parentReport.getParameters() != null
         && Arrays.stream(parentReport.getParameters())
@@ -265,7 +265,7 @@ public class JasperTemplateService {
       return Collections.emptyMap();
     }
 
-    File configDir = new File(configPath);
+    File configDir = new File(CONFIG_PATH);
     if (!configDir.exists() || !configDir.isDirectory()) {
       // config directory does not exist
       return Collections.emptyMap();
@@ -282,13 +282,11 @@ public class JasperTemplateService {
     }
 
     Map<String, Object> parameters = new HashMap<>();
-    File headerFile = new File(configPath + headerName + ".jrxml");
+    File headerFile = new File(CONFIG_PATH + headerName + ".jrxml");
     if (headerFile.exists()) {
       try (InputStream is = Files.newInputStream(headerFile.toPath())) {
         JasperReport globalHeader = JasperCompileManager.compileReport(is);
         parameters.put("headerTemplate", globalHeader);
-      } catch (JRException | IOException e) {
-        throw new ReportingException(e, ERROR_REPORTING_FILE_INVALID);
       }
     } else {
       return Collections.emptyMap();
@@ -306,7 +304,7 @@ public class JasperTemplateService {
    */
   private Map<String, Object> injectDynamicHeaderParams() throws IOException {
     Map<String, Object> parameters = new HashMap<>();
-    File configFile = new File(configPath + "header_config.properties");
+    File configFile = new File(CONFIG_PATH + "header_config.properties");
 
     if (configFile.exists()) {
       Properties dynamicProps = new Properties();
@@ -318,7 +316,7 @@ public class JasperTemplateService {
         String value = dynamicProps.getProperty(key);
 
         if (key.endsWith("Image")) {
-          File imageFile = new File(configPath + value);
+          File imageFile = new File(CONFIG_PATH + value);
           if (imageFile.exists()) {
             parameters.put(key, imageFile.getAbsolutePath());
           }

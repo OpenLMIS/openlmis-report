@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
@@ -59,18 +60,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JRPropertiesMap;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.type.OrientationEnum;
+import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -106,6 +111,7 @@ import org.springframework.web.multipart.MultipartFile;
     JasperTemplateService.class,
     JasperCompileManager.class,
     ResourceBundle.class,
+    JRLoader.class,
     java.nio.file.Files.class
 })
 @SuppressWarnings("PMD.TooManyMethods")
@@ -139,6 +145,14 @@ public class JasperTemplateServiceTest {
   private static final String PARAM3 = "param3";
   private static final String PARAM4 = "param4";
   private static final String IMAGE_NAME = "image";
+  private static final String RESOURCE_BUNDLE_NAME = "report_translations";
+  private static final String RESOURCE_BUNDLE_PATH = "/config/reports/resourceBundles";
+  private static final String HEADER_PARAM_NAME = "headerTemplate";
+  private static final String CONFIG_PATH_CONST = "/config/reports/";
+  private static final String JRXML_EXTENSION = ".jrxml";
+  private static final String HEADER_CONFIG_PROPERTIES = "/config/reports/header_config.properties";
+  private static final String GLOBAL_HEADER_LANDSCAPE = "GlobalHeaderLandscape";
+  private static final String GLOBAL_HEADER_PORTRAIT = "GlobalHeaderPortrait";
   
   private HttpServletRequest request;
   private JasperTemplate template;
@@ -606,31 +620,75 @@ public class JasperTemplateServiceTest {
   }
 
   @Test
-  public void getLocaleBundleShouldReturnEmptyMapIfNoResourceBundleProperty() throws Exception {
+  public void getLocaleBundleShouldReturnEmptyMapForInvalidResourceBundleNames() throws Exception {
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(null, "en").isEmpty());
+
     JasperReport parentReport = mock(JasperReport.class);
+
     when(parentReport.getResourceBundle()).thenReturn(null);
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
 
-    Map<String, Object> result = jasperTemplateService
-        .getLocaleBundleParameters(parentReport, "en");
+    // 3. Covers: resourceBundleName.isEmpty()
+    when(parentReport.getResourceBundle()).thenReturn("");
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
 
-    assertTrue(result.isEmpty());
+    // 4. Covers: resourceBundleName.trim().isEmpty()
+    when(parentReport.getResourceBundle()).thenReturn("   ");
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
+  }
+
+  @Test
+  public void getLocaleBundleShouldReturnEmptyMapIfResourceBundleDirectoryDoesNotExist()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
+
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
+
+    when(mockDir.exists()).thenReturn(false);
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
+
+    when(mockDir.exists()).thenReturn(true);
+    when(mockDir.isDirectory()).thenReturn(false);
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
+  }
+
+  @Test
+  public void getLocaleBundleShouldReturnEmptyMapIfTranslationBundleIsMissingFromDisk()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
+
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
+    when(mockDir.exists()).thenReturn(true);
+    when(mockDir.isDirectory()).thenReturn(true);
+    when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
+
+    mockStatic(ResourceBundle.class);
+
+    when(ResourceBundle.getBundle(anyString(), any(Locale.class), any(URLClassLoader.class)))
+        .thenThrow(new MissingResourceException("Missing resource exception occurred",
+            "ResourceBundle", "key"));
+    assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
   }
 
   @Test
   public void getLocaleBundleShouldReturnMapWithBundleAndLocale() throws Exception {
     JasperReport parentReport = mock(JasperReport.class);
-    when(parentReport.getResourceBundle()).thenReturn("report_translations");
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
 
     // Mock the Config Directory
     File mockDir = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/resourceBundles").thenReturn(mockDir);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
     when(mockDir.exists()).thenReturn(true);
     when(mockDir.isDirectory()).thenReturn(true);
     when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
 
     ResourceBundle mockBundle = mock(ResourceBundle.class);
     mockStatic(ResourceBundle.class);
-    when(ResourceBundle.getBundle(eq("report_translations"), any(Locale.class),
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
         any(URLClassLoader.class))).thenReturn(mockBundle);
 
     Map<String, Object> result = jasperTemplateService
@@ -640,6 +698,158 @@ public class JasperTemplateServiceTest {
     assertEquals(mockBundle, result.get(JRParameter.REPORT_RESOURCE_BUNDLE));
     assertEquals(new Locale.Builder().setLanguageTag("fr").build(),
         result.get(JRParameter.REPORT_LOCALE));
+  }
+
+  @Test
+  public void getLocaleBundleShouldFallbackToEnglishForInvalidLocale() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
+
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
+    when(mockDir.exists()).thenReturn(true);
+    when(mockDir.isDirectory()).thenReturn(true);
+    when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
+
+    ResourceBundle mockBundle = mock(ResourceBundle.class);
+    mockStatic(ResourceBundle.class);
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
+        any(URLClassLoader.class))).thenReturn(mockBundle);
+
+    Map<String, Object> result = jasperTemplateService
+        .getLocaleBundleParameters(parentReport, "invalid_locale");
+
+    assertEquals(Locale.ENGLISH, result.get(JRParameter.REPORT_LOCALE));
+  }
+
+  @Test
+  public void loadReportShouldReturnNullForNullTemplate() throws Exception {
+    JasperReport result = jasperTemplateService.loadReport(null);
+    assertNull(result);
+  }
+
+  @Test
+  public void loadReportShouldSuccessfullyLoadValidTemplate() throws Exception {
+    JasperTemplate template = mock(JasperTemplate.class);
+    byte[] templateData = new byte[]{1, 2, 3};
+    when(template.getData()).thenReturn(templateData);
+
+    JasperReport mockReport = mock(JasperReport.class);
+    mockStatic(JRLoader.class);
+    when(JRLoader.loadObject(any(InputStream.class))).thenReturn(mockReport);
+
+    JasperReport result = jasperTemplateService.loadReport(template);
+
+    assertEquals(mockReport, result);
+  }
+
+  @Test
+  public void loadReportShouldThrowExceptionForInvalidReportFile() throws Exception {
+    JasperTemplate template = mock(JasperTemplate.class);
+    byte[] templateData = new byte[]{1, 2, 3};
+    when(template.getData()).thenReturn(templateData);
+
+    mockStatic(JRLoader.class);
+    when(JRLoader.loadObject(any(InputStream.class))).thenThrow(new JRException("Invalid file"));
+
+    expectedException.expect(ReportingException.class);
+    expectedException.expectMessage(ERROR_REPORTING_FILE_INVALID);
+
+    jasperTemplateService.loadReport(template);
+  }
+
+  @Test
+  public void getGlobalHeaderShouldReturnEmptyMapWhenHeaderConfigFileDoesNotExist()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(true);
+
+    File tempJrxml = File.createTempFile(GLOBAL_HEADER_PORTRAIT, JRXML_EXTENSION);
+    tempJrxml.deleteOnExit();
+
+    File mockHeaderFile = mock(File.class);
+    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+        .thenReturn(mockHeaderFile);
+    when(mockHeaderFile.exists()).thenReturn(true);
+    when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
+
+    JasperReport mockCompiledHeader = mock(JasperReport.class);
+    mockStatic(JasperCompileManager.class);
+    when(JasperCompileManager.compileReport(any(InputStream.class)))
+        .thenReturn(mockCompiledHeader);
+
+    File mockConfigFile = mock(File.class);
+    whenNew(File.class).withArguments(HEADER_CONFIG_PROPERTIES)
+        .thenReturn(mockConfigFile);
+    when(mockConfigFile.exists()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertEquals(1, result.size());
+    assertEquals(mockCompiledHeader, result.get(HEADER_PARAM_NAME));
+  }
+
+  @Test
+  public void getGlobalHeaderShouldSkipImageParamsWhenImageFileDoesNotExist() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(true);
+
+    File tempJrxml = File.createTempFile(GLOBAL_HEADER_PORTRAIT, JRXML_EXTENSION);
+    tempJrxml.deleteOnExit();
+
+    File tempPropsFile = File.createTempFile("header_config", ".properties");
+    tempPropsFile.deleteOnExit();
+
+    try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempPropsFile)) {
+      fos.write("title=Test Title\nlogoImage=nonexistent.png".getBytes());
+    }
+
+    File mockHeaderFile = mock(File.class);
+    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+        .thenReturn(mockHeaderFile);
+    when(mockHeaderFile.exists()).thenReturn(true);
+    when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
+
+    JasperReport mockCompiledHeader = mock(JasperReport.class);
+    mockStatic(JasperCompileManager.class);
+    when(JasperCompileManager.compileReport(any(InputStream.class)))
+        .thenReturn(mockCompiledHeader);
+
+    File mockConfigFile = mock(File.class);
+    whenNew(File.class).withArguments(HEADER_CONFIG_PROPERTIES)
+        .thenReturn(mockConfigFile);
+    when(mockConfigFile.exists()).thenReturn(true);
+    when(mockConfigFile.toPath()).thenReturn(tempPropsFile.toPath());
+
+    File mockImageFile = mock(File.class);
+    whenNew(File.class).withArguments("/config/reports/nonexistent.png")
+        .thenReturn(mockImageFile);
+    when(mockImageFile.exists()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertEquals(2, result.size());
+    assertEquals(mockCompiledHeader, result.get(HEADER_PARAM_NAME));
+    assertEquals("Test Title", result.get("title"));
+    assertNull(result.get("logoImage"));
   }
 
   @Test
@@ -656,17 +866,138 @@ public class JasperTemplateServiceTest {
   }
 
   @Test
+  public void getGlobalHeaderShouldReturnEmptyMapForNullParentReport() throws Exception {
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(null);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void getGlobalHeaderShouldReturnEmptyMapIfParametersAreNull() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getParameters()).thenReturn(null);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void getGlobalHeaderShouldReturnEmptyMapIfConfigDirectoryDoesNotExist()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void getGlobalHeaderShouldReturnEmptyMapIfConfigDirectoryIsNotADirectory()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void getGlobalHeaderShouldReturnEmptyMapIfHeaderFileDoesNotExist() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(true);
+
+    File mockHeaderFile = mock(File.class);
+    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+        .thenReturn(mockHeaderFile);
+    when(mockHeaderFile.exists()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void getGlobalHeaderShouldUseLandscapeHeaderForLandscapeOrientation() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.LANDSCAPE);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(true);
+
+    File tempJrxml = File.createTempFile(GLOBAL_HEADER_LANDSCAPE, JRXML_EXTENSION);
+    tempJrxml.deleteOnExit();
+
+    File mockHeaderFile = mock(File.class);
+    whenNew(File.class).withArguments("/config/reports/GlobalHeaderLandscape.jrxml")
+        .thenReturn(mockHeaderFile);
+    when(mockHeaderFile.exists()).thenReturn(true);
+    when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
+
+    JasperReport mockCompiledHeader = mock(JasperReport.class);
+    mockStatic(JasperCompileManager.class);
+    when(JasperCompileManager.compileReport(any(InputStream.class)))
+        .thenReturn(mockCompiledHeader);
+
+    File mockConfigFile = mock(File.class);
+    whenNew(File.class).withArguments(HEADER_CONFIG_PROPERTIES)
+        .thenReturn(mockConfigFile);
+    when(mockConfigFile.exists()).thenReturn(false);
+
+    Map<String, Object> result = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    assertEquals(1, result.size());
+    assertEquals(mockCompiledHeader, result.get(HEADER_PARAM_NAME));
+  }
+
+  @Test
   public void getGlobalHeaderShouldReturnEmptyMapIfOrientationNotRecognized() throws Exception {
     JasperReport parentReport = mock(JasperReport.class);
     JRParameter headerParam = mock(JRParameter.class);
-    when(headerParam.getName()).thenReturn("headerTemplate");
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
     when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
 
     // Unrecognized orientation
     when(parentReport.getOrientationValue()).thenReturn(null);
 
     File mockConfigDir = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/").thenReturn(mockConfigDir);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
     when(mockConfigDir.exists()).thenReturn(true);
     when(mockConfigDir.isDirectory()).thenReturn(true);
 
@@ -680,17 +1011,17 @@ public class JasperTemplateServiceTest {
   public void getGlobalHeaderShouldReturnCompiledHeaderAndDynamicParams() throws Exception {
     JasperReport parentReport = mock(JasperReport.class);
     JRParameter headerParam = mock(JRParameter.class);
-    when(headerParam.getName()).thenReturn("headerTemplate");
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
     when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
     when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.LANDSCAPE);
 
     // Mock the Config Directory
     File mockConfigDir = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/").thenReturn(mockConfigDir);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
     when(mockConfigDir.exists()).thenReturn(true);
     when(mockConfigDir.isDirectory()).thenReturn(true);
 
-    File tempJrxml = File.createTempFile("GlobalHeaderLandscape", ".jrxml");
+    File tempJrxml = File.createTempFile(GLOBAL_HEADER_LANDSCAPE, JRXML_EXTENSION);
     tempJrxml.deleteOnExit();
 
     File tempPropsFile = File.createTempFile("header_config", ".properties");
@@ -713,7 +1044,7 @@ public class JasperTemplateServiceTest {
     when(JasperCompileManager.compileReport(any(InputStream.class))).thenReturn(mockCompiledHeader);
 
     File mockConfigFile = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/header_config.properties")
+    whenNew(File.class).withArguments(HEADER_CONFIG_PROPERTIES)
         .thenReturn(mockConfigFile);
     when(mockConfigFile.exists()).thenReturn(true);
 
@@ -729,7 +1060,7 @@ public class JasperTemplateServiceTest {
         .getMapSubreportGlobalHeaderParameters(parentReport);
 
     assertEquals(3, result.size());
-    assertEquals(mockCompiledHeader, result.get("headerTemplate"));
+    assertEquals(mockCompiledHeader, result.get(HEADER_PARAM_NAME));
     assertEquals("Test Ministry", result.get("title"));
     assertEquals("/config/reports/logo.png", result.get("logoImage"));
   }

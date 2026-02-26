@@ -185,7 +185,7 @@ public class JasperTemplateController extends BaseController {
   @ResponseBody
   public ResponseEntity<byte[]> generateReport(
       HttpServletRequest request, @PathVariable("id") UUID templateId,
-      @PathVariable("format") String format, @RequestParam(defaultValue = "en") String locale)
+      @PathVariable("format") String format, @RequestParam(defaultValue = "en") String lang)
       throws JasperReportViewException {
     JasperTemplate template = jasperTemplateRepository.findById(templateId)
         .orElseThrow(() -> new NotFoundMessageException(
@@ -208,20 +208,14 @@ public class JasperTemplateController extends BaseController {
 
     try {
       JasperReport templateReport = jasperTemplateService.loadReport(template);
-
-      try {
-        map.putAll(jasperTemplateService.getLocaleBundleParameters(templateReport, locale));
-      } catch (MalformedURLException e) {
-        LOGGER.debug("Cannot load translation bundle for {}", template.getName());
-      }
-
-      try {
-        map.putAll(jasperTemplateService.getMapSubreportGlobalHeaderParameters(templateReport));
-      } catch (ReportingException | JRException | IOException ex) {
-        LOGGER.debug("Cannot load GlobalHeaderTemplate for {}", template.getName());
-      }
+      map.putAll(jasperTemplateService.getLocaleBundleParameters(templateReport, lang));
+      map.putAll(jasperTemplateService.getMapSubreportGlobalHeaderParameters(templateReport));
     } catch (ReportingException e) {
       LOGGER.debug("Cannot compile template {}", template.getName());
+    } catch (MalformedURLException e) {
+      LOGGER.debug("Cannot load translation bundle for {}", template.getName());
+    } catch (JRException | IOException ex) {
+      LOGGER.debug("Cannot load GlobalHeaderTemplate for {}", template.getName());
     }
 
     map.put("format", format);
