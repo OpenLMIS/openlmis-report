@@ -730,7 +730,7 @@ public class JasperTemplateServiceTest {
 
   @Test
   public void loadReportShouldSuccessfullyLoadValidTemplate() throws Exception {
-    JasperTemplate template = mock(JasperTemplate.class);
+    template = mock(JasperTemplate.class);
     byte[] templateData = new byte[]{1, 2, 3};
     when(template.getData()).thenReturn(templateData);
 
@@ -745,7 +745,7 @@ public class JasperTemplateServiceTest {
 
   @Test
   public void loadReportShouldThrowExceptionForInvalidReportFile() throws Exception {
-    JasperTemplate template = mock(JasperTemplate.class);
+    template = mock(JasperTemplate.class);
     byte[] templateData = new byte[]{1, 2, 3};
     when(template.getData()).thenReturn(templateData);
 
