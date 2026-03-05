@@ -215,7 +215,6 @@ public class JasperTemplateService {
   public Map<String, Object> getLocaleBundleParameters(JasperReport parentReport,
                                                        String userLocaleString)
       throws MalformedURLException {
-    // validate if report requires resource bundle or not
     String resourceBundleName = parentReport != null ? parentReport.getResourceBundle() : null;
     if (resourceBundleName == null || resourceBundleName.trim().isEmpty()) {
       return Collections.emptyMap();
@@ -223,28 +222,50 @@ public class JasperTemplateService {
 
     Locale userLocale;
     try {
-      // try to parse locale param else fallback to english
       userLocale = new Locale.Builder().setLanguageTag(userLocaleString).build();
     } catch (Exception e) {
       userLocale = Locale.ENGLISH;
     }
+
     Map<String, Object> parameters = new HashMap<>();
+    ResourceBundle bundle = loadResourceBundle(userLocale);
+
+    if (bundle != null) {
+      parameters.put(JRParameter.REPORT_RESOURCE_BUNDLE, bundle);
+      parameters.put(JRParameter.REPORT_LOCALE, userLocale);
+    }
+
+    return parameters;
+  }
+
+  /**
+   * Load translations resource bundle from shared config with fallback to internal translations
+   * bundle.
+   *
+   * @param locale the locale
+   * @return the resource bundle
+   */
+  private ResourceBundle loadResourceBundle(Locale locale) {
     File resourceBundleDir = new File(CONFIG_PATH + "resourceBundles");
+
+    // Attempt to load from the config
     if (resourceBundleDir.exists() && resourceBundleDir.isDirectory()) {
-      URL[] urls = {resourceBundleDir.toURI().toURL()};
-
-      try (URLClassLoader externalLoader = new URLClassLoader(urls)) {
-        ResourceBundle externalBundle = ResourceBundle
-            .getBundle("report_translations", userLocale, externalLoader);
-
-        parameters.put(JRParameter.REPORT_RESOURCE_BUNDLE, externalBundle);
-        parameters.put(JRParameter.REPORT_LOCALE, userLocale);
+      try {
+        URL[] urls = {resourceBundleDir.toURI().toURL()};
+        try (URLClassLoader externalLoader = new URLClassLoader(urls)) {
+          return ResourceBundle.getBundle("report_translations", locale, externalLoader);
+        }
       } catch (IOException | MissingResourceException e) {
-        // No translations bundle
-        return Collections.emptyMap();
+        resourceBundleDir = null;
       }
     }
-    return parameters;
+
+    // Fallback to the internal Classpath
+    try {
+      return ResourceBundle.getBundle("report_translations", locale);
+    } catch (MissingResourceException e) {
+      return null;
+    }
   }
 
   /**

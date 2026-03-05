@@ -149,6 +149,7 @@ public class JasperTemplateServiceTest {
   private static final String RESOURCE_BUNDLE_PATH = "/config/reports/resourceBundles";
   private static final String HEADER_PARAM_NAME = "headerTemplate";
   private static final String CONFIG_PATH_CONST = "/config/reports/";
+  private static final String DUMMY_FILE_URI = "file://dummy";
   private static final String JRXML_EXTENSION = ".jrxml";
   private static final String HEADER_CONFIG_PROPERTIES = "/config/reports/header_config.properties";
   private static final String GLOBAL_HEADER_LANDSCAPE = "GlobalHeaderLandscape";
@@ -655,6 +656,63 @@ public class JasperTemplateServiceTest {
   }
 
   @Test
+  public void getLocaleBundleShouldFallbackToInternalBundleWhenConfigDirectoryNotFound()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
+
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
+    when(mockDir.exists()).thenReturn(false);
+
+    ResourceBundle fallbackBundle = mock(ResourceBundle.class);
+
+    mockStatic(ResourceBundle.class);
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class)))
+        .thenReturn(fallbackBundle);
+
+    Map<String, Object> result = jasperTemplateService
+        .getLocaleBundleParameters(parentReport, "en");
+
+    assertEquals(2, result.size());
+    assertEquals(fallbackBundle, result.get(JRParameter.REPORT_RESOURCE_BUNDLE));
+    assertEquals(Locale.ENGLISH, result.get(JRParameter.REPORT_LOCALE));
+  }
+
+  @Test
+  public void getLocaleBundleShouldFallbackToInternalBundleWhenConfigBundleNotFound()
+      throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    when(parentReport.getResourceBundle()).thenReturn(RESOURCE_BUNDLE_NAME);
+
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
+    when(mockDir.exists()).thenReturn(true);
+    when(mockDir.isDirectory()).thenReturn(true);
+    when(mockDir.toURI()).thenReturn(new java.net.URI(DUMMY_FILE_URI));
+
+    ResourceBundle fallbackBundle = mock(ResourceBundle.class);
+
+    mockStatic(ResourceBundle.class);
+
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
+        any(URLClassLoader.class)))
+        .thenThrow(new MissingResourceException("Missing resource from config",
+            "ResourceBundle", "key"));
+
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class)))
+        .thenReturn(fallbackBundle);
+
+    Map<String, Object> result = jasperTemplateService
+        .getLocaleBundleParameters(parentReport, "fr");
+
+    assertEquals(2, result.size());
+    assertEquals(fallbackBundle, result.get(JRParameter.REPORT_RESOURCE_BUNDLE));
+    assertEquals(new Locale.Builder().setLanguageTag("fr").build(),
+        result.get(JRParameter.REPORT_LOCALE));
+  }
+
+  @Test
   public void getLocaleBundleShouldReturnEmptyMapIfTranslationBundleIsMissingFromDisk()
       throws Exception {
     JasperReport parentReport = mock(JasperReport.class);
@@ -664,7 +722,7 @@ public class JasperTemplateServiceTest {
     whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
     when(mockDir.exists()).thenReturn(true);
     when(mockDir.isDirectory()).thenReturn(true);
-    when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
+    when(mockDir.toURI()).thenReturn(new java.net.URI(DUMMY_FILE_URI));
 
     mockStatic(ResourceBundle.class);
 
@@ -684,7 +742,7 @@ public class JasperTemplateServiceTest {
     whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
     when(mockDir.exists()).thenReturn(true);
     when(mockDir.isDirectory()).thenReturn(true);
-    when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
+    when(mockDir.toURI()).thenReturn(new java.net.URI(DUMMY_FILE_URI));
 
     ResourceBundle mockBundle = mock(ResourceBundle.class);
     mockStatic(ResourceBundle.class);
@@ -709,7 +767,7 @@ public class JasperTemplateServiceTest {
     whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
     when(mockDir.exists()).thenReturn(true);
     when(mockDir.isDirectory()).thenReturn(true);
-    when(mockDir.toURI()).thenReturn(new java.net.URI("file://dummy"));
+    when(mockDir.toURI()).thenReturn(new java.net.URI(DUMMY_FILE_URI));
 
     ResourceBundle mockBundle = mock(ResourceBundle.class);
     mockStatic(ResourceBundle.class);
