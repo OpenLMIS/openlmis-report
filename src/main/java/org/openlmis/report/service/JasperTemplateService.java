@@ -358,15 +358,29 @@ public class JasperTemplateService {
    */
   public JasperReport loadReport(JasperTemplate jasperTemplate) throws ReportingException {
     if (jasperTemplate != null) {
-      try (InputStream is = new ByteArrayInputStream(jasperTemplate.getData())) {
-        return (JasperReport) JRLoader.loadObject(is);
-      } catch (JRException ex) {
-        throw new ReportingException(ex, ERROR_REPORTING_FILE_INVALID);
-      } catch (IOException ex) {
-        throw new ReportingException(ex, ERROR_REPORTING_IO, ex.getMessage());
-      }
+      return loadReport(jasperTemplate.getData());
     }
     return null;
+  }
+
+  /**
+   * Load report jasper report.
+   *
+   * @param template the template
+   * @return the jasper report
+   * @throws ReportingException the reporting exception
+   */
+  public JasperReport loadReport(byte[] template) throws ReportingException {
+    if (template.length == 0) {
+      return null;
+    }
+    try (InputStream is = new ByteArrayInputStream(template)) {
+      return (JasperReport) JRLoader.loadObject(is);
+    } catch (JRException ex) {
+      throw new ReportingException(ex, ERROR_REPORTING_FILE_INVALID);
+    } catch (IOException ex) {
+      throw new ReportingException(ex, ERROR_REPORTING_IO, ex.getMessage());
+    }
   }
 
   /**

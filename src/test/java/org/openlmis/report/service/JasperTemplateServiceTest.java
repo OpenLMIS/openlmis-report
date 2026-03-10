@@ -648,6 +648,11 @@ public class JasperTemplateServiceTest {
     whenNew(File.class).withArguments(RESOURCE_BUNDLE_PATH).thenReturn(mockDir);
 
     when(mockDir.exists()).thenReturn(false);
+
+    mockStatic(ResourceBundle.class);
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class)))
+        .thenThrow(new MissingResourceException("Test", RESOURCE_BUNDLE_NAME, "key"));
+
     assertTrue(jasperTemplateService.getLocaleBundleParameters(parentReport, "en").isEmpty());
 
     when(mockDir.exists()).thenReturn(true);
@@ -782,7 +787,7 @@ public class JasperTemplateServiceTest {
 
   @Test
   public void loadReportShouldReturnNullForNullTemplate() throws Exception {
-    JasperReport result = jasperTemplateService.loadReport(null);
+    JasperReport result = jasperTemplateService.loadReport((JasperTemplate) null);
     assertNull(result);
   }
 
