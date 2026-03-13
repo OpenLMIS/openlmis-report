@@ -173,7 +173,7 @@ public class GenerateReportControllerTest {
 
   @Test
   public void shouldHandleTranslationExceptionsGracefully() throws Exception {
-    when(jasperTemplateService.getLocaleBundleParameters(any(), anyString()))
+    when(jasperTemplateService.getLocaleBundleParameters(anyString()))
         .thenThrow(new MalformedURLException("Simulated failure"));
 
     Map<String, Object> params = new HashMap<>();

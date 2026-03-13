@@ -212,11 +212,9 @@ public class JasperTemplateService {
    * @return the locale bundle parameters
    * @throws MalformedURLException the malformed url exception
    */
-  public Map<String, Object> getLocaleBundleParameters(JasperReport parentReport,
-                                                       String userLocaleString)
+  public Map<String, Object> getLocaleBundleParameters(String userLocaleString)
       throws MalformedURLException {
-    String resourceBundleName = parentReport != null ? parentReport.getResourceBundle() : null;
-    if (resourceBundleName == null || resourceBundleName.trim().isEmpty()) {
+    if (userLocaleString == null) {
       return Collections.emptyMap();
     }
 

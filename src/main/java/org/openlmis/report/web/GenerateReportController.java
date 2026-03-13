@@ -87,6 +87,7 @@ public class GenerateReportController extends BaseController {
     JasperReport templateReport = jasperTemplateService.loadReport(request.getTemplate());
 
     processDataSource(params);
+    processSubreports(params);
     addTranslationsAndHeaders(templateReport, params, templateName);
     addFormattingParameters(params);
 
@@ -116,11 +117,26 @@ public class GenerateReportController extends BaseController {
     }
   }
 
+  private void processSubreports(Map<String, Object> params) {
+    if (params.containsKey("subreport_bytes")) {
+      try {
+        String base64String = (String) params.get("subreport_bytes");
+        byte[] subreportData = java.util.Base64.getDecoder().decode(base64String);
+
+        JasperReport compiledSubreport = jasperTemplateService.loadReport(subreportData);
+        params.put("subreport", compiledSubreport);
+        params.remove("subreport_bytes");
+      } catch (Exception e) {
+        LOGGER.error("Failed to decode and compile subreport", e);
+      }
+    }
+  }
+
   private void addTranslationsAndHeaders(JasperReport templateReport, Map<String, Object> params,
                                          String templateName) {
     try {
-      String lang = params.containsKey("lang") ? String.valueOf(params.get("lang")) : "en";
-      params.putAll(jasperTemplateService.getLocaleBundleParameters(templateReport, lang));
+      String lang = params.containsKey("lang") ? String.valueOf(params.get("lang")) : null;
+      params.putAll(jasperTemplateService.getLocaleBundleParameters(lang));
       params.putAll(jasperTemplateService.getMapSubreportGlobalHeaderParameters(templateReport));
     } catch (MalformedURLException e) {
       LOGGER.debug("Cannot load translation bundle for {}", templateName);
