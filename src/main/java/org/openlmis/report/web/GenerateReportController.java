@@ -49,11 +49,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class GenerateReportController extends BaseController {
   private static final Logger LOGGER = LoggerFactory.getLogger(GenerateReportController.class);
   private static final String PARAM_FORMAT = "format";
-  @Autowired
-  private JasperTemplateService jasperTemplateService;
+  private static final String PARAM_DATASOURCE = "datasource";
+  private static final String PARAM_SUBREPORT_BYTES = "subreport_bytes";
 
-  @Autowired
-  private JasperReportsViewService jasperReportsViewService;
+  private final JasperTemplateService jasperTemplateService;
+  private final JasperReportsViewService jasperReportsViewService;
 
   @Value("${dateTimeFormat}")
   private String dateTimeFormat;
@@ -69,6 +69,13 @@ public class GenerateReportController extends BaseController {
 
   @Value("${time.zoneId}")
   private String timeZoneId;
+
+  @Autowired
+  public GenerateReportController(JasperTemplateService jasperTemplateService,
+                                  JasperReportsViewService jasperReportsViewService) {
+    this.jasperTemplateService = jasperTemplateService;
+    this.jasperReportsViewService = jasperReportsViewService;
+  }
 
   /**
    * Generate report response entity.
@@ -107,25 +114,25 @@ public class GenerateReportController extends BaseController {
   }
 
   private void processDataSource(Map<String, Object> params) {
-    if (params.containsKey("datasource")) {
-      Object rawDataSource = params.get("datasource");
+    if (params.containsKey(PARAM_DATASOURCE)) {
+      Object rawDataSource = params.get(PARAM_DATASOURCE);
       if (rawDataSource instanceof Collection) {
         JRMapCollectionDataSource dataSource =
             new JRMapCollectionDataSource((Collection<Map<String, ?>>) rawDataSource);
-        params.put("datasource", dataSource);
+        params.put(PARAM_DATASOURCE, dataSource);
       }
     }
   }
 
   private void processSubreports(Map<String, Object> params) {
-    if (params.containsKey("subreport_bytes")) {
+    if (params.containsKey(PARAM_SUBREPORT_BYTES)) {
       try {
-        String base64String = (String) params.get("subreport_bytes");
+        String base64String = (String) params.get(PARAM_SUBREPORT_BYTES);
         byte[] subreportData = java.util.Base64.getDecoder().decode(base64String);
 
         JasperReport compiledSubreport = jasperTemplateService.loadReport(subreportData);
         params.put("subreport", compiledSubreport);
-        params.remove("subreport_bytes");
+        params.remove(PARAM_SUBREPORT_BYTES);
       } catch (Exception e) {
         LOGGER.error("Failed to decode and compile subreport", e);
       }

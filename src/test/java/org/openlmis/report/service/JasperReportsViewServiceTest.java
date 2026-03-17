@@ -16,15 +16,13 @@
 package org.openlmis.report.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -32,6 +30,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import org.apache.commons.io.serialization.ValidatingObjectInputStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +47,8 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(BlockJUnit4ClassRunner.class)
-@PrepareForTest({JasperReportsViewService.class, JasperFillManager.class, DataSource.class})
+@PrepareForTest({JasperReportsViewService.class, JasperFillManager.class, DataSource.class,
+    ValidatingObjectInputStream.class})
 public class JasperReportsViewServiceTest {
 
   private static final String FORMAT_PARAM = "format";
@@ -68,7 +69,10 @@ public class JasperReportsViewServiceTest {
   private JasperPdfExporter jasperPdfExporter;
 
   @Mock
-  private ObjectInputStream inputStream;
+  private JasperReport jasperReport;
+
+  @Mock
+  private ValidatingObjectInputStream validatingObjectInputStream;
 
   @Mock
   private DataSource replicationDataSource;
@@ -83,10 +87,15 @@ public class JasperReportsViewServiceTest {
   @Before
   public void init() throws Exception {
     initializeExporterMocks();
-    whenNew(ObjectInputStream.class).withAnyArguments().thenReturn(inputStream);
-    whenNew(ByteArrayInputStream.class).withAnyArguments().thenReturn(null);
+
+    doReturn(new byte[0]).when(jasperTemplate).getData();
+
+    whenNew(ValidatingObjectInputStream.class).withAnyArguments()
+        .thenReturn(validatingObjectInputStream);
+    when(validatingObjectInputStream.readObject()).thenReturn(jasperReport);
+
     mockStatic(JasperFillManager.class);
-    when(JasperFillManager.fillReport(any(InputStream.class), any(), any(Connection.class)))
+    when(JasperFillManager.fillReport(any(JasperReport.class), any(), any(Connection.class)))
         .thenReturn(new JasperPrint());
   }
 
