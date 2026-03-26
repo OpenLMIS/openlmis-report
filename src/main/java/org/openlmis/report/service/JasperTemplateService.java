@@ -164,8 +164,8 @@ public class JasperTemplateService {
 
         if (templateParameterName.equalsIgnoreCase(requestParamName)) {
           String requestParamValue = "";
-          if (requestParameterMap.get(templateParameterName).length > 0) {
-            requestParamValue = requestParameterMap.get(templateParameterName)[0];
+          if (requestParameterMap.get(requestParamName).length > 0) {
+            requestParamValue = requestParameterMap.get(requestParamName)[0];
           }
 
           if (!(isBlank(requestParamValue)
