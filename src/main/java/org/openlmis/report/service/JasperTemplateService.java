@@ -160,12 +160,12 @@ public class JasperTemplateService {
     for (JasperTemplateParameter templateParameter : templateParameters) {
       String templateParameterName = templateParameter.getName();
 
-      for (String requestParamName : requestParameterMap.keySet()) {
+      for (Map.Entry<String, String[]> requestParamName : requestParameterMap.entrySet()) {
 
-        if (templateParameterName.equalsIgnoreCase(requestParamName)) {
+        if (templateParameterName.equalsIgnoreCase(requestParamName.getKey())) {
           String requestParamValue = "";
-          if (requestParameterMap.get(requestParamName).length > 0) {
-            requestParamValue = requestParameterMap.get(requestParamName)[0];
+          if (requestParamName.getValue().length > 0) {
+            requestParamValue = requestParamName.getValue()[0];
           }
 
           if (!(isBlank(requestParamValue)

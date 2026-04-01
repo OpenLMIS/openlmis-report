@@ -42,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openlmis.report.dto.external.GenerateReportDto;
+import org.openlmis.report.exception.ReportingException;
 import org.openlmis.report.service.JasperReportsViewService;
 import org.openlmis.report.service.JasperTemplateService;
 import org.springframework.http.MediaType;
@@ -183,5 +184,19 @@ public class GenerateReportControllerTest {
 
     assertEquals(200, response.getStatusCodeValue());
     assertArrayEquals(EXPECTED_REPORT, response.getBody());
+  }
+
+  @Test(expected = ReportingException.class)
+  public void shouldThrowReportingExceptionWhenSubreportCannotBeCompiled() throws Exception {
+    String invalidSubreport = "invalid-base64";
+    Map<String, Object> params = new HashMap<>();
+    params.put("subreport_bytes", invalidSubreport);
+
+    when(jasperTemplateService.loadReport(any(byte[].class)))
+        .thenThrow(new ReportingException("Cannot compile subreport"));
+
+    GenerateReportDto request = new GenerateReportDto(TEMPLATE_NAME, TEMPLATE_DATA, params);
+
+    controller.generateReport(request);
   }
 }

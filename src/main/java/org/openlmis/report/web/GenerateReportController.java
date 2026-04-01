@@ -23,6 +23,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
@@ -33,7 +34,6 @@ import org.openlmis.report.service.JasperReportsViewService;
 import org.openlmis.report.service.JasperTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,8 +44,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@Transactional
+@Transactional(readOnly = true)
 @RequestMapping("/api/reports/generate")
+@RequiredArgsConstructor
 public class GenerateReportController extends BaseController {
   private static final Logger LOGGER = LoggerFactory.getLogger(GenerateReportController.class);
   private static final String PARAM_FORMAT = "format";
@@ -69,13 +70,6 @@ public class GenerateReportController extends BaseController {
 
   @Value("${time.zoneId}")
   private String timeZoneId;
-
-  @Autowired
-  public GenerateReportController(JasperTemplateService jasperTemplateService,
-                                  JasperReportsViewService jasperReportsViewService) {
-    this.jasperTemplateService = jasperTemplateService;
-    this.jasperReportsViewService = jasperReportsViewService;
-  }
 
   /**
    * Generate report response entity.
@@ -124,18 +118,14 @@ public class GenerateReportController extends BaseController {
     }
   }
 
-  private void processSubreports(Map<String, Object> params) {
+  private void processSubreports(Map<String, Object> params) throws ReportingException {
     if (params.containsKey(PARAM_SUBREPORT_BYTES)) {
-      try {
-        String base64String = (String) params.get(PARAM_SUBREPORT_BYTES);
-        byte[] subreportData = java.util.Base64.getDecoder().decode(base64String);
+      String base64String = (String) params.get(PARAM_SUBREPORT_BYTES);
+      byte[] subreportData = java.util.Base64.getDecoder().decode(base64String);
 
-        JasperReport compiledSubreport = jasperTemplateService.loadReport(subreportData);
-        params.put("subreport", compiledSubreport);
-        params.remove(PARAM_SUBREPORT_BYTES);
-      } catch (Exception e) {
-        LOGGER.error("Failed to decode and compile subreport", e);
-      }
+      JasperReport compiledSubreport = jasperTemplateService.loadReport(subreportData);
+      params.put("subreport", compiledSubreport);
+      params.remove(PARAM_SUBREPORT_BYTES);
     }
   }
 

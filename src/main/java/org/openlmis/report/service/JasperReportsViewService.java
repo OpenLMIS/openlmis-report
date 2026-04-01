@@ -57,8 +57,8 @@ public class JasperReportsViewService {
 
     try {
       JasperReport jasperReport;
-      try (ByteArrayInputStream byteInputStream = new ByteArrayInputStream(template)) {
-        ValidatingObjectInputStream vois = new ValidatingObjectInputStream(byteInputStream);
+      try (ByteArrayInputStream byteInputStream = new ByteArrayInputStream(template);
+           ValidatingObjectInputStream vois = new ValidatingObjectInputStream(byteInputStream)) {
         vois.accept(
             "net.sf.jasperreports.*",
             "java.awt.*",

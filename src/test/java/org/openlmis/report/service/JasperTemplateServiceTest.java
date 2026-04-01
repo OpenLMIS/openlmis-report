@@ -716,7 +716,7 @@ public class JasperTemplateServiceTest {
 
   @Test
   public void saveWithParametersShouldSaveTemplate() {
-    JasperTemplate template = new JasperTemplate();
+    template = new JasperTemplate();
 
     jasperTemplateService.saveWithParameters(template);
 
