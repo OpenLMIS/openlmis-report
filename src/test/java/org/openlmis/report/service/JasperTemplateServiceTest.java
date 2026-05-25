@@ -160,6 +160,8 @@ public class JasperTemplateServiceTest {
   private static final String GLOBAL_HEADER_PORTRAIT = "GlobalHeaderPortrait";
   private static final String DESC = "desc";
   private static final String USERS_MANAGE = "USERS_MANAGE";
+  private static final String JAVA_LANG_STRING = "java.lang.String";
+  private static final String DEFAULT_EXPR_TEXT = "text";
   
   private HttpServletRequest request;
   private JasperTemplate template;
@@ -439,12 +441,12 @@ public class JasperTemplateServiceTest {
     when(propertiesMap.getProperty("options")).thenReturn("option 1,opt\\,ion 2");
 
     when(param1.getPropertiesMap()).thenReturn(propertiesMap);
-    when(param1.getValueClassName()).thenReturn("java.lang.String");
+    when(param1.getValueClassName()).thenReturn(JAVA_LANG_STRING);
     when(param1.getName()).thenReturn(PARAM_NAME);
     when(param1.isForPrompting()).thenReturn(true);
     when(param1.getDescription()).thenReturn(DESC);
     when(param1.getDefaultValueExpression()).thenReturn(jrExpression);
-    when(jrExpression.getText()).thenReturn("text");
+    when(jrExpression.getText()).thenReturn(DEFAULT_EXPR_TEXT);
 
     when(param2.getPropertiesMap()).thenReturn(propertiesMap);
     when(param2.getValueClassName()).thenReturn("java.lang.Integer");
@@ -508,10 +510,10 @@ public class JasperTemplateServiceTest {
     when(propertiesMap.getProperty(DISPLAY_NAME)).thenReturn(PARAM_DISPLAY_NAME);
 
     when(param1.getPropertiesMap()).thenReturn(propertiesMap);
-    when(param1.getValueClassName()).thenReturn("java.lang.String");
+    when(param1.getValueClassName()).thenReturn(JAVA_LANG_STRING);
     when(param1.isForPrompting()).thenReturn(true);
     when(param1.getDefaultValueExpression()).thenReturn(jrExpression);
-    when(jrExpression.getText()).thenReturn("text");
+    when(jrExpression.getText()).thenReturn(DEFAULT_EXPR_TEXT);
 
     when(param2.getPropertiesMap()).thenReturn(propertiesMap);
     when(param2.getValueClassName()).thenReturn("java.lang.Integer");
@@ -670,11 +672,11 @@ public class JasperTemplateServiceTest {
         + "field2:contains:value2");
 
     when(param1.getPropertiesMap()).thenReturn(propertiesMap);
-    when(param1.getValueClassName()).thenReturn("java.lang.String");
+    when(param1.getValueClassName()).thenReturn(JAVA_LANG_STRING);
     when(param1.getName()).thenReturn(PARAM_NAME);
     when(param1.isForPrompting()).thenReturn(true);
     when(param1.getDefaultValueExpression()).thenReturn(jrExpression);
-    when(jrExpression.getText()).thenReturn("text");
+    when(jrExpression.getText()).thenReturn(DEFAULT_EXPR_TEXT);
 
     ByteArrayOutputStream byteOutputStream = mock(ByteArrayOutputStream.class);
     whenNew(ByteArrayOutputStream.class).withAnyArguments().thenReturn(byteOutputStream);
@@ -1403,11 +1405,11 @@ public class JasperTemplateServiceTest {
     when(JasperCompileManager.compileReport(inputStream)).thenReturn(report);
     when(propertiesMap.getPropertyNames()).thenReturn(propertyNames);
     when(propertiesMap.getProperty(DISPLAY_NAME)).thenReturn(PARAM_DISPLAY_NAME);
-    when(jrExpression.getText()).thenReturn("text");
+    when(jrExpression.getText()).thenReturn(DEFAULT_EXPR_TEXT);
 
     for (JRParameter p : new JRParameter[]{first, second, third}) {
       when(p.getPropertiesMap()).thenReturn(propertiesMap);
-      when(p.getValueClassName()).thenReturn("java.lang.String");
+      when(p.getValueClassName()).thenReturn(JAVA_LANG_STRING);
       when(p.isForPrompting()).thenReturn(true);
       when(p.getDefaultValueExpression()).thenReturn(jrExpression);
     }
