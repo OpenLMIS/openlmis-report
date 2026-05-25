@@ -228,7 +228,7 @@ public class JasperTemplateServiceTest {
 
     // when
     JasperTemplate resultTemplate = service.saveTemplate(file,
-        JasperTemplateServiceTest.DISPLAY_NAME, description, requiredRights, CATEGORY_NAME);
+        JasperTemplateServiceTest.DISPLAY_NAME, description, requiredRights, CATEGORY_NAME, false);
 
     // then
     assertEquals(JasperTemplateServiceTest.DISPLAY_NAME, resultTemplate.getName());
@@ -249,7 +249,7 @@ public class JasperTemplateServiceTest {
 
     // when
     jasperTemplateService.saveTemplate(null, null, null, Collections.singletonList(rejectedRight),
-        null);
+        null, false);
   }
   
   @Test
@@ -742,7 +742,7 @@ public class JasperTemplateServiceTest {
         .willReturn(new RightDto());
 
     jasperTemplateService.saveTemplate(file, "TestName", "Description",
-        requiredRights, "NonExistentCategory");
+        requiredRights, "NonExistentCategory", false);
   }
 
   @Test
@@ -776,7 +776,7 @@ public class JasperTemplateServiceTest {
         .validateFileAndSaveTemplate(any(JasperTemplate.class), eq(file));
 
     JasperTemplate resultTemplate = service.saveTemplate(file,
-        DISPLAY_NAME, newDescription, newRights, CATEGORY_NAME);
+        DISPLAY_NAME, newDescription, newRights, CATEGORY_NAME, false);
 
     assertEquals(newDescription, resultTemplate.getDescription());
     assertEquals(newRights, resultTemplate.getRequiredRights());
