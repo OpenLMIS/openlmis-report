@@ -213,6 +213,52 @@ public class JasperTemplateServiceTest {
     assertEquals(template.getId(), oldId);
   }
 
+  @Test
+  public void shouldThrowWhenTemplateExistsAndOverrideIsNull() throws Exception {
+    expectedException.expect(ValidationMessageException.class);
+    expectedException.expectMessage(ERROR_REPORTING_TEMPLATE_EXIST);
+
+    ReportCategory reportCategory = new ReportCategory();
+    reportCategory.setId(UUID.randomUUID());
+    reportCategory.setName(CATEGORY_NAME);
+
+    JasperTemplate existing = new JasperTemplate();
+    existing.setName(DISPLAY_NAME);
+    existing.setId(UUID.randomUUID());
+    existing.setRequiredRights(new ArrayList<>());
+    existing.setCategory(reportCategory);
+
+    given(jasperTemplateRepository.findByName(anyString())).willReturn(existing);
+    given(reportCategoryRepository.findByName(anyString())).willReturn(Optional.of(reportCategory));
+    given(rightReferenceDataService.findRight(anyString())).willReturn(new RightDto());
+
+    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, "desc",
+        Collections.singletonList("USERS_MANAGE"), CATEGORY_NAME, null);
+  }
+
+  @Test
+  public void shouldThrowWhenTemplateExistsAndOverrideIsFalse() throws Exception {
+    expectedException.expect(ValidationMessageException.class);
+    expectedException.expectMessage(ERROR_REPORTING_TEMPLATE_EXIST);
+
+    ReportCategory reportCategory = new ReportCategory();
+    reportCategory.setId(UUID.randomUUID());
+    reportCategory.setName(CATEGORY_NAME);
+
+    JasperTemplate existing = new JasperTemplate();
+    existing.setName(DISPLAY_NAME);
+    existing.setId(UUID.randomUUID());
+    existing.setRequiredRights(new ArrayList<>());
+    existing.setCategory(reportCategory);
+
+    given(jasperTemplateRepository.findByName(anyString())).willReturn(existing);
+    given(reportCategoryRepository.findByName(anyString())).willReturn(Optional.of(reportCategory));
+    given(rightReferenceDataService.findRight(anyString())).willReturn(new RightDto());
+
+    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, "desc",
+        Collections.singletonList("USERS_MANAGE"), CATEGORY_NAME, false);
+  }
+
   private JasperTemplate testSaveTemplate() throws ReportingException {
     JasperTemplateService service = spy(jasperTemplateService);
     MultipartFile file = mock(MultipartFile.class);
