@@ -17,7 +17,12 @@ package org.openlmis.report.web;
 
 import java.util.Collections;
 import java.util.Map;
+import org.openlmis.report.exception.NotFoundMessageException;
+import org.openlmis.report.i18n.SupersetMessageKeys;
+import org.openlmis.report.repository.DashboardReportRepository;
+import org.openlmis.report.service.PermissionService;
 import org.openlmis.report.service.SupersetService;
+import org.openlmis.report.utils.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +40,12 @@ public class SupersetGuestTokenController extends BaseController {
   @Autowired
   private SupersetService supersetService;
 
+  @Autowired
+  private DashboardReportRepository dashboardReportRepository;
+
+  @Autowired
+  private PermissionService permissionService;
+
   /**
    * Get a Superset guest token for embedding a dashboard.
    *
@@ -45,6 +56,13 @@ public class SupersetGuestTokenController extends BaseController {
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
   public Map<String, String> getGuestToken(@RequestParam String embeddedUuid) {
+    permissionService.canViewReports();
+
+    if (!dashboardReportRepository.existsByEmbeddedUuid(embeddedUuid)) {
+      throw new NotFoundMessageException(
+          new Message(SupersetMessageKeys.ERROR_SUPERSET_DASHBOARD_NOT_FOUND, embeddedUuid));
+    }
+
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
     String token = supersetService.getGuestToken(

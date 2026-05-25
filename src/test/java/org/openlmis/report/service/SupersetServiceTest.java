@@ -16,6 +16,7 @@
 package org.openlmis.report.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -31,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.openlmis.report.exception.ServerException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -153,7 +155,24 @@ public class SupersetServiceTest {
     );
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
+  public void shouldThrowWhenSupersetIsNotConfigured() {
+    for (String field : new String[] {"supersetUrl", "adminUser", "adminPassword"}) {
+      setUp();
+      ReflectionTestUtils.setField(supersetService, field, "");
+      ServerException thrown = null;
+      try {
+        supersetService.getGuestToken(EMBEDDED_UUID, USERNAME, USERNAME, USERNAME);
+      } catch (ServerException ex) {
+        thrown = ex;
+      }
+      if (thrown == null) {
+        fail("Expected ServerException when " + field + " is empty");
+      }
+    }
+  }
+
+  @Test(expected = ServerException.class)
   public void shouldThrowOnNullLoginResponse() {
     // given
     when(restTemplate.exchange(
@@ -167,7 +186,7 @@ public class SupersetServiceTest {
     supersetService.getGuestToken(EMBEDDED_UUID, USERNAME, USERNAME, USERNAME);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ServerException.class)
   public void shouldThrowOnNullGuestTokenResponse() {
     // given
     mockLoginResponse();

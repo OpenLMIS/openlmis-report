@@ -19,8 +19,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openlmis.report.exception.ServerException;
+import org.openlmis.report.i18n.SupersetMessageKeys;
+import org.openlmis.report.utils.Message;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -38,15 +39,13 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class SupersetService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(SupersetService.class);
-
   @Value("${superset.url:}")
   private String supersetUrl;
 
-  @Value("${superset.admin.user:admin}")
+  @Value("${superset.admin.user:}")
   private String adminUser;
 
-  @Value("${superset.admin.password:changeme}")
+  @Value("${superset.admin.password:}")
   private String adminPassword;
 
   private final RestTemplate restTemplate = new RestTemplate();
@@ -65,11 +64,13 @@ public class SupersetService {
    */
   public String getGuestToken(String embeddedUuid, String username,
                               String firstName, String lastName) {
+    if (supersetUrl.isEmpty() || adminUser.isEmpty() || adminPassword.isEmpty()) {
+      throw new ServerException(new Message(SupersetMessageKeys.ERROR_SUPERSET_NOT_CONFIGURED));
+    }
     try {
       return requestGuestToken(embeddedUuid, username, firstName, lastName);
     } catch (HttpClientErrorException ex) {
       if (ex.getStatusCode().value() == 401) {
-        LOGGER.info("Superset access token expired, re-authenticating");
         clearCachedToken();
         return requestGuestToken(embeddedUuid, username, firstName, lastName);
       }
@@ -119,7 +120,7 @@ public class SupersetService {
 
     Map responseBody = response.getBody();
     if (responseBody == null || !responseBody.containsKey("token")) {
-      throw new IllegalStateException("Unexpected Superset guest_token response: " + responseBody);
+      throw new ServerException(new Message(SupersetMessageKeys.ERROR_SUPERSET_GUEST_TOKEN_FAILED));
     }
     return (String) responseBody.get("token");
   }
@@ -152,13 +153,12 @@ public class SupersetService {
 
     Map loginResponse = response.getBody();
     if (loginResponse == null || !loginResponse.containsKey("access_token")) {
-      throw new IllegalStateException("Unexpected Superset login response: " + loginResponse);
+      throw new ServerException(new Message(SupersetMessageKeys.ERROR_SUPERSET_LOGIN_FAILED));
     }
     cachedAccessToken = (String) loginResponse.get("access_token");
     // Cache token for 4 minutes (Superset default expiry is 5 minutes)
     tokenExpiresAt = System.currentTimeMillis() + (4 * 60 * 1000);
 
-    LOGGER.debug("Successfully obtained Superset access token");
     return cachedAccessToken;
   }
 
@@ -177,7 +177,7 @@ public class SupersetService {
 
     Map csrfBody = response.getBody();
     if (csrfBody == null || !csrfBody.containsKey("result")) {
-      throw new IllegalStateException("Unexpected Superset CSRF response: " + csrfBody);
+      throw new ServerException(new Message(SupersetMessageKeys.ERROR_SUPERSET_CSRF_FAILED));
     }
     String csrfToken = (String) csrfBody.get("result");
 

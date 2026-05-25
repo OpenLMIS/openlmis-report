@@ -16,6 +16,9 @@
 package org.openlmis.report.web;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -25,7 +28,12 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.openlmis.report.exception.NotFoundMessageException;
+import org.openlmis.report.exception.PermissionMessageException;
+import org.openlmis.report.repository.DashboardReportRepository;
+import org.openlmis.report.service.PermissionService;
 import org.openlmis.report.service.SupersetService;
+import org.openlmis.report.utils.Message;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -38,12 +46,21 @@ public class SupersetGuestTokenControllerTest {
   @Mock
   private SupersetService supersetService;
 
+  @Mock
+  private DashboardReportRepository dashboardReportRepository;
+
+  @Mock
+  private PermissionService permissionService;
+
   @InjectMocks
   private SupersetGuestTokenController controller;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(USERNAME, "password")
+    );
   }
 
   @After
@@ -53,28 +70,40 @@ public class SupersetGuestTokenControllerTest {
 
   @Test
   public void shouldReturnGuestToken() {
-    // given
-    SecurityContextHolder.getContext().setAuthentication(
-        new UsernamePasswordAuthenticationToken(USERNAME, "password")
-    );
-
+    when(dashboardReportRepository.existsByEmbeddedUuid(EMBEDDED_UUID)).thenReturn(true);
     when(supersetService.getGuestToken(EMBEDDED_UUID, USERNAME, USERNAME, USERNAME))
         .thenReturn(GUEST_TOKEN);
 
-    // when
     Map<String, String> result = controller.getGuestToken(EMBEDDED_UUID);
 
-    // then
     assertEquals(GUEST_TOKEN, result.get("token"));
     assertEquals(1, result.size());
+    verify(permissionService).canViewReports();
   }
 
-  @Test(expected = NullPointerException.class)
-  public void shouldThrowWhenNotAuthenticated() {
-    // given - no security context / authentication set
-    SecurityContextHolder.clearContext();
+  @Test(expected = NotFoundMessageException.class)
+  public void shouldThrowNotFoundWhenDashboardDoesNotExist() {
+    when(dashboardReportRepository.existsByEmbeddedUuid(EMBEDDED_UUID)).thenReturn(false);
 
-    // when
-    controller.getGuestToken(EMBEDDED_UUID);
+    try {
+      controller.getGuestToken(EMBEDDED_UUID);
+    } finally {
+      verify(supersetService, never()).getGuestToken(
+          EMBEDDED_UUID, USERNAME, USERNAME, USERNAME);
+    }
+  }
+
+  @Test(expected = PermissionMessageException.class)
+  public void shouldThrowWhenUserLacksReportsViewRight() {
+    doThrow(new PermissionMessageException(new Message("report.error.noPermission")))
+        .when(permissionService).canViewReports();
+
+    try {
+      controller.getGuestToken(EMBEDDED_UUID);
+    } finally {
+      verify(dashboardReportRepository, never()).existsByEmbeddedUuid(EMBEDDED_UUID);
+      verify(supersetService, never()).getGuestToken(
+          EMBEDDED_UUID, USERNAME, USERNAME, USERNAME);
+    }
   }
 }
