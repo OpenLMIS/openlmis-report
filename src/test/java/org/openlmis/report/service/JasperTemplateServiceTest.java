@@ -158,6 +158,8 @@ public class JasperTemplateServiceTest {
   private static final String HEADER_CONFIG_PROPERTIES = "/config/reports/header_config.properties";
   private static final String GLOBAL_HEADER_LANDSCAPE = "GlobalHeaderLandscape";
   private static final String GLOBAL_HEADER_PORTRAIT = "GlobalHeaderPortrait";
+  private static final String DESC = "desc";
+  private static final String USERS_MANAGE = "USERS_MANAGE";
   
   private HttpServletRequest request;
   private JasperTemplate template;
@@ -232,8 +234,8 @@ public class JasperTemplateServiceTest {
     given(reportCategoryRepository.findByName(anyString())).willReturn(Optional.of(reportCategory));
     given(rightReferenceDataService.findRight(anyString())).willReturn(new RightDto());
 
-    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, "desc",
-        Collections.singletonList("USERS_MANAGE"), CATEGORY_NAME, null);
+    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, DESC,
+        Collections.singletonList(USERS_MANAGE), CATEGORY_NAME, null);
   }
 
   @Test
@@ -255,15 +257,15 @@ public class JasperTemplateServiceTest {
     given(reportCategoryRepository.findByName(anyString())).willReturn(Optional.of(reportCategory));
     given(rightReferenceDataService.findRight(anyString())).willReturn(new RightDto());
 
-    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, "desc",
-        Collections.singletonList("USERS_MANAGE"), CATEGORY_NAME, false);
+    jasperTemplateService.saveTemplate(mock(MultipartFile.class), DISPLAY_NAME, DESC,
+        Collections.singletonList(USERS_MANAGE), CATEGORY_NAME, false);
   }
 
   private JasperTemplate testSaveTemplate() throws ReportingException {
     JasperTemplateService service = spy(jasperTemplateService);
     MultipartFile file = mock(MultipartFile.class);
     String description = "description";
-    List<String> requiredRights = Collections.singletonList("USERS_MANAGE");
+    List<String> requiredRights = Collections.singletonList(USERS_MANAGE);
 
     given(rightReferenceDataService.findRight(requiredRights.get(0)))
         .willReturn(new RightDto());
@@ -440,7 +442,7 @@ public class JasperTemplateServiceTest {
     when(param1.getValueClassName()).thenReturn("java.lang.String");
     when(param1.getName()).thenReturn(PARAM_NAME);
     when(param1.isForPrompting()).thenReturn(true);
-    when(param1.getDescription()).thenReturn("desc");
+    when(param1.getDescription()).thenReturn(DESC);
     when(param1.getDefaultValueExpression()).thenReturn(jrExpression);
     when(jrExpression.getText()).thenReturn("text");
 
@@ -448,7 +450,7 @@ public class JasperTemplateServiceTest {
     when(param2.getValueClassName()).thenReturn("java.lang.Integer");
     when(param2.getName()).thenReturn(PARAM_NAME);
     when(param2.isForPrompting()).thenReturn(true);
-    when(param2.getDescription()).thenReturn("desc");
+    when(param2.getDescription()).thenReturn(DESC);
     when(param2.getDefaultValueExpression()).thenReturn(jrExpression);
 
     when(param3.getValueClassName()).thenReturn("java.awt.Image");
@@ -475,7 +477,7 @@ public class JasperTemplateServiceTest {
     assertEquals("test type", jasperTemplate.getType());
     assertThat(jasperTemplate.getTemplateParameters().get(0).getDisplayName(),
         is(PARAM_DISPLAY_NAME));
-    assertThat(jasperTemplate.getTemplateParameters().get(0).getDescription(), is("desc"));
+    assertThat(jasperTemplate.getTemplateParameters().get(0).getDescription(), is(DESC));
     assertThat(jasperTemplate.getTemplateParameters().get(0).getName(), is(PARAM_NAME));
     assertThat(jasperTemplate.getTemplateParameters().get(0).getRequired(), is(true));
     assertThat(jasperTemplate.getTemplateParameters().get(0).getOptions(), contains("option 1",
@@ -782,7 +784,7 @@ public class JasperTemplateServiceTest {
         .willReturn(Optional.empty());
 
     MultipartFile file = mock(MultipartFile.class);
-    List<String> requiredRights = Collections.singletonList("USERS_MANAGE");
+    List<String> requiredRights = Collections.singletonList(USERS_MANAGE);
 
     given(rightReferenceDataService.findRight(requiredRights.get(0)))
         .willReturn(new RightDto());
@@ -816,7 +818,7 @@ public class JasperTemplateServiceTest {
     JasperTemplateService service = spy(jasperTemplateService);
     MultipartFile file = mock(MultipartFile.class);
     String newDescription = "New Description";
-    List<String> newRights = Collections.singletonList("USERS_MANAGE");
+    List<String> newRights = Collections.singletonList(USERS_MANAGE);
 
     doNothing().when(service)
         .validateFileAndSaveTemplate(any(JasperTemplate.class), eq(file));
