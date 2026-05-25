@@ -228,7 +228,7 @@ public class JasperTemplateServiceTest {
 
     // when
     JasperTemplate resultTemplate = service.saveTemplate(file,
-        JasperTemplateServiceTest.DISPLAY_NAME, description, requiredRights, CATEGORY_NAME, false);
+        JasperTemplateServiceTest.DISPLAY_NAME, description, requiredRights, CATEGORY_NAME, true);
 
     // then
     assertEquals(JasperTemplateServiceTest.DISPLAY_NAME, resultTemplate.getName());
@@ -776,7 +776,7 @@ public class JasperTemplateServiceTest {
         .validateFileAndSaveTemplate(any(JasperTemplate.class), eq(file));
 
     JasperTemplate resultTemplate = service.saveTemplate(file,
-        DISPLAY_NAME, newDescription, newRights, CATEGORY_NAME, false);
+        DISPLAY_NAME, newDescription, newRights, CATEGORY_NAME, true);
 
     assertEquals(newDescription, resultTemplate.getDescription());
     assertEquals(newRights, resultTemplate.getRequiredRights());
