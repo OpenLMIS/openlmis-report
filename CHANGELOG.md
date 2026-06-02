@@ -4,6 +4,8 @@ Upcoming Version / (WIP)
 Improvements:
 * Stabilized consul registration and health checks
 * [ODRC-24](https://openlmis.atlassian.net/browse/ODRC-24) Global header and translations implemented for reports
+* [OLMIS-8231](https://openlmis.atlassian.net/browse/OLMIS-8231): Preserve Jasper template parameters order as declared in the .jrxml file.
+* [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
 
 Bugs:
 * [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report
