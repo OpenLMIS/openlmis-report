@@ -248,7 +248,7 @@
         OR ($P{startDate} IS NULL AND $P{endDate} IS NULL)
       )
   	)
-	SELECT
+	SELECT DISTINCT
 	  facilityName,
 	  productName,
 	  productCode,
