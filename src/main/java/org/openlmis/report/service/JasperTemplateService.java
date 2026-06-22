@@ -454,8 +454,20 @@ public class JasperTemplateService {
     }
   }
 
+  private Map<String, JasperTemplateParameter> buildExistingParamMap(JasperTemplate template) {
+    Map<String, JasperTemplateParameter> map = new HashMap<>();
+    if (template.getTemplateParameters() != null) {
+      for (JasperTemplateParameter p : template.getTemplateParameters()) {
+        map.put(p.getName(), p);
+      }
+    }
+    return map;
+  }
+
   private void processJrParameters(JasperTemplate jasperTemplate, JRParameter[] jrParameters)
       throws ReportingException {
+    Map<String, JasperTemplateParameter> existingByName = buildExistingParamMap(jasperTemplate);
+
     ArrayList<JasperTemplateParameter> parameters = new ArrayList<>();
     Set<ReportImage> images = new HashSet<>();
     int order = 0;
@@ -466,6 +478,10 @@ public class JasperTemplateService {
           JasperTemplateParameter jasperTemplateParameter = createParameter(jrParameter);
           jasperTemplateParameter.setTemplate(jasperTemplate);
           jasperTemplateParameter.setDisplayOrder(order++);
+          JasperTemplateParameter existing = existingByName.get(jrParameter.getName());
+          if (existing != null) {
+            mergeDbOnlyFields(jasperTemplateParameter, existing);
+          }
           parameters.add(jasperTemplateParameter);
         } else if (Image.class.getName().equals(jrParameter.getValueClassName())) {
           String name = jrParameter.getName();
@@ -545,6 +561,23 @@ public class JasperTemplateService {
     jasperTemplateParameter.setDependencies(extractDependencies(jrParameter));
 
     return jasperTemplateParameter;
+  }
+
+  private void mergeDbOnlyFields(JasperTemplateParameter target, JasperTemplateParameter source) {
+    if (target.getSelectExpression() == null) {
+      target.setSelectExpression(source.getSelectExpression());
+    }
+    if (target.getSelectProperty() == null) {
+      target.setSelectProperty(source.getSelectProperty());
+    }
+    if (target.getDisplayProperty() == null) {
+      target.setDisplayProperty(source.getDisplayProperty());
+    }
+    if (target.getDescription() == null) {
+      target.setDescription(source.getDescription());
+    }
+    target.setSelectMethod(source.getSelectMethod());
+    target.setSelectBody(source.getSelectBody());
   }
 
   private void throwIfTemplateWithSameNameAlreadyExists(String name) throws ReportingException {
