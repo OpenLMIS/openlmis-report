@@ -10,6 +10,7 @@ Improvements:
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
 * [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report — remove SELECT DISTINCT that was hiding identical legitimate movements
+
 New functionality:
 * [MW-1449](https://openlmis.atlassian.net/browse/MW-1449): Added Superset guest token endpoint for embedded dashboards. Dashboard reports now carry an optional `embeddedUuid` column referencing a Superset embedded dashboard. The new `/api/reports/superset/guest-token` endpoint exchanges an OpenLMIS user for a short-lived Superset guest token, gated by the `REPORTS_VIEW` right and a lookup against the dashboard's `embeddedUuid`.
 
