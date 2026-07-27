@@ -33,6 +33,7 @@ import org.openlmis.report.service.referencedata.RightReferenceDataService;
 import org.openlmis.report.utils.Message;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("PMD.UnusedPrivateField")
 public class DashboardReportServiceTest {
 
   @Mock
