@@ -12,6 +12,7 @@ Improvements:
 
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
+* [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies — dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.
 * [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report — remove SELECT DISTINCT that was hiding identical legitimate movements
 
 New functionality:
