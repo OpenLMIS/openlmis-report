@@ -6,7 +6,7 @@ Improvements:
 * [ODRC-24](https://openlmis.atlassian.net/browse/ODRC-24) Global header and translations implemented for reports
 * [OLMIS-8231](https://openlmis.atlassian.net/browse/OLMIS-8231): Preserve Jasper template parameters order as declared in the .jrxml file.
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached.
+* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached. Separator style stays localizable.
 
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
