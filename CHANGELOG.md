@@ -2,14 +2,18 @@ Upcoming Version / (WIP)
 ==================
 
 Improvements:
+* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached. Separator style stays localizable.
+* [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Migrated the SonarCloud analysis to Java 21 by running it through the SonarQube scan action instead of the Gradle plugin, and removed the now-unused Gradle sonar plugin and configuration.
+* [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Removed the axios dependency from the Consul registration script, replacing it with the native Node `http` client (no more axios security advisories to track).
 * Stabilized consul registration and health checks
 * [ODRC-24](https://openlmis.atlassian.net/browse/ODRC-24) Global header and translations implemented for reports
 * [OLMIS-8231](https://openlmis.atlassian.net/browse/OLMIS-8231): Preserve Jasper template parameters order as declared in the .jrxml file.
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached. Separator style stays localizable.
+* Enabled JaCoCo offline instrumentation so coverage of classes exercised through PowerMock (`@PrepareForTest` / `whenNew` / `spy`) is recorded; these were previously reported as near-zero because PowerMock's classloader bypasses the on-the-fly agent.
 
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
+* [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies — dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.
 * [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report — remove SELECT DISTINCT that was hiding identical legitimate movements
 
 New functionality:

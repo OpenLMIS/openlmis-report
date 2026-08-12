@@ -439,41 +439,41 @@ public class JasperTemplateService {
       throws ReportingException {
     Map<String, JasperTemplateParameter> existingByName = buildExistingParamMap(jasperTemplate);
 
-    ArrayList<JasperTemplateParameter> parameters = new ArrayList<>();
+    List<JasperTemplateParameter> reconciled = new ArrayList<>();
     Set<ReportImage> images = new HashSet<>();
     int order = 0;
 
     for (JRParameter jrParameter : jrParameters) {
-      if (!jrParameter.isSystemDefined()) {
-        if (jrParameter.isForPrompting()) {
-          JasperTemplateParameter jasperTemplateParameter = createParameter(jrParameter);
-          jasperTemplateParameter.setTemplate(jasperTemplate);
-          jasperTemplateParameter.setDisplayOrder(order++);
-          JasperTemplateParameter existing = existingByName.get(jrParameter.getName());
-          if (existing != null) {
-            mergeDbOnlyFields(jasperTemplateParameter, existing);
-          }
-          parameters.add(jasperTemplateParameter);
-        } else if (Image.class.getName().equals(jrParameter.getValueClassName())) {
-          String name = jrParameter.getName();
-          ReportImage reportImage = reportImageRepository.findByName(name);
-          if (reportImage == null) {
-            throw new ReportingException(ReportImageMessageKeys.ERROR_NOT_FOUND_WITH_NAME, name);
-          }
-          images.add(reportImage);
+      if (jrParameter.isSystemDefined()) {
+        continue;
+      }
+
+      if (jrParameter.isForPrompting()) {
+        JasperTemplateParameter parsed = createParameter(jrParameter);
+        JasperTemplateParameter existing = existingByName.get(jrParameter.getName());
+
+        // Reuse the managed row when the parameter already exists so its id and DB-only
+        // metadata survive the re-upload; only create a new row when it is genuinely new.
+        JasperTemplateParameter target = existing != null ? existing : parsed;
+        if (existing != null) {
+          applyParsedFields(target, parsed);
         }
+        target.setTemplate(jasperTemplate);
+        target.setDisplayOrder(order++);
+        replaceDependencies(target, parsed.getDependencies());
+
+        reconciled.add(target);
+      } else if (Image.class.getName().equals(jrParameter.getValueClassName())) {
+        String name = jrParameter.getName();
+        ReportImage reportImage = reportImageRepository.findByName(name);
+        if (reportImage == null) {
+          throw new ReportingException(ReportImageMessageKeys.ERROR_NOT_FOUND_WITH_NAME, name);
+        }
+        images.add(reportImage);
       }
     }
 
-    // Mutate existing collections instead of replacing references, otherwise
-    // Hibernate's orphanRemoval=true throws "collection no longer referenced"
-    // when called on a managed entity (override=true update path).
-    if (jasperTemplate.getTemplateParameters() == null) {
-      jasperTemplate.setTemplateParameters(new ArrayList<>());
-    } else {
-      jasperTemplate.getTemplateParameters().clear();
-    }
-    jasperTemplate.getTemplateParameters().addAll(parameters);
+    syncTemplateParameters(jasperTemplate, reconciled);
 
     if (jasperTemplate.getReportImages() == null) {
       jasperTemplate.setReportImages(new HashSet<>());
@@ -534,21 +534,65 @@ public class JasperTemplateService {
     return jasperTemplateParameter;
   }
 
-  private void mergeDbOnlyFields(JasperTemplateParameter target, JasperTemplateParameter source) {
-    if (target.getSelectExpression() == null) {
-      target.setSelectExpression(source.getSelectExpression());
+  // Reconcile the managed parameter collection in place: keep and update the rows still declared
+  // in the file, add the newly declared ones, and let orphanRemoval delete the parameters that
+  // disappeared together with their dependency rows (children-before-parent).
+  private void syncTemplateParameters(JasperTemplate template,
+      List<JasperTemplateParameter> reconciled) {
+    if (template.getTemplateParameters() == null) {
+      template.setTemplateParameters(new ArrayList<>());
     }
-    if (target.getSelectProperty() == null) {
-      target.setSelectProperty(source.getSelectProperty());
+    List<JasperTemplateParameter> current = template.getTemplateParameters();
+    current.removeIf(parameter -> !reconciled.contains(parameter));
+    for (JasperTemplateParameter parameter : reconciled) {
+      if (!current.contains(parameter)) {
+        current.add(parameter);
+      }
     }
-    if (target.getDisplayProperty() == null) {
-      target.setDisplayProperty(source.getDisplayProperty());
+  }
+
+  // Copy the fields sourced from the .jrxml onto an already-managed parameter. DB-only metadata
+  // (selectMethod, selectBody) is never present in the file and is left untouched; the optional
+  // API fields are only overwritten when the file actually provides a value.
+  private void applyParsedFields(JasperTemplateParameter target, JasperTemplateParameter parsed) {
+    target.setDisplayName(parsed.getDisplayName());
+    target.setDataType(parsed.getDataType());
+    target.setDefaultValue(parsed.getDefaultValue());
+    target.setOptions(parsed.getOptions());
+    if (parsed.getRequired() != null) {
+      target.setRequired(parsed.getRequired());
     }
-    if (target.getDescription() == null) {
-      target.setDescription(source.getDescription());
+    if (parsed.getSelectExpression() != null) {
+      target.setSelectExpression(parsed.getSelectExpression());
     }
-    target.setSelectMethod(source.getSelectMethod());
-    target.setSelectBody(source.getSelectBody());
+    if (parsed.getSelectProperty() != null) {
+      target.setSelectProperty(parsed.getSelectProperty());
+    }
+    if (parsed.getDisplayProperty() != null) {
+      target.setDisplayProperty(parsed.getDisplayProperty());
+    }
+    if (parsed.getDescription() != null) {
+      target.setDescription(parsed.getDescription());
+    }
+  }
+
+  // Replace a parameter's dependency rows in place and wire the back-reference explicitly, so the
+  // NOT NULL parameterId is always written from a parameter that already holds a persisted id
+  // instead of relying on the @PrePersist callback and Hibernate merge/flush ordering.
+  private void replaceDependencies(JasperTemplateParameter parameter,
+      List<JasperTemplateParameterDependency> parsedDependencies) {
+    // copy first: for a newly parsed parameter the incoming list is the parameter's own
+    // dependencies collection, which the clear() below would otherwise empty before the loop.
+    List<JasperTemplateParameterDependency> incoming = new ArrayList<>(parsedDependencies);
+    if (parameter.getDependencies() == null) {
+      parameter.setDependencies(new ArrayList<>());
+    } else {
+      parameter.getDependencies().clear();
+    }
+    for (JasperTemplateParameterDependency dependency : incoming) {
+      dependency.setParameter(parameter);
+      parameter.getDependencies().add(dependency);
+    }
   }
 
   private void throwIfTemplateWithSameNameAlreadyExists(String name) throws ReportingException {
