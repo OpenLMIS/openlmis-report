@@ -9,7 +9,6 @@ Improvements:
 * [ODRC-24](https://openlmis.atlassian.net/browse/ODRC-24) Global header and translations implemented for reports
 * [OLMIS-8231](https://openlmis.atlassian.net/browse/OLMIS-8231): Preserve Jasper template parameters order as declared in the .jrxml file.
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
-* Enabled JaCoCo offline instrumentation so coverage of classes exercised through PowerMock (`@PrepareForTest` / `whenNew` / `spy`) is recorded; these were previously reported as near-zero because PowerMock's classloader bypasses the on-the-fly agent.
 
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
