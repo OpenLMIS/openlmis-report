@@ -2,6 +2,7 @@ Upcoming Version / (WIP)
 ==================
 
 Improvements:
+* [OLMIS-8176](https://openlmis.atlassian.net/browse/OLMIS-8176): Added the Pack Size report translations (report.column.packSize, report.header.packSize) used by the new Pack Size column in the stock reports.
 * [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached. Separator style stays localizable.
 * [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Migrated the SonarCloud analysis to Java 21 by running it through the SonarQube scan action instead of the Gradle plugin, and removed the now-unused Gradle sonar plugin and configuration.
 * [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Removed the axios dependency from the Consul registration script, replacing it with the native Node `http` client (no more axios security advisories to track).
