@@ -12,6 +12,9 @@ Improvements:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
 * Enabled JaCoCo offline instrumentation so coverage of classes exercised through PowerMock (`@PrepareForTest` / `whenNew` / `spy`) is recorded; these were previously reported as near-zero because PowerMock's classloader bypasses the on-the-fly agent.
 
+Security:
+* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Restricted `POST /api/reports/generate` to service-level tokens (the trusted client).
+
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies — dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.

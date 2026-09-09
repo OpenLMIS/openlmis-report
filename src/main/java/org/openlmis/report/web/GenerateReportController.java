@@ -32,6 +32,7 @@ import org.openlmis.report.exception.JasperReportViewException;
 import org.openlmis.report.exception.ReportingException;
 import org.openlmis.report.service.JasperReportsViewService;
 import org.openlmis.report.service.JasperTemplateService;
+import org.openlmis.report.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,6 +56,7 @@ public class GenerateReportController extends BaseController {
 
   private final JasperTemplateService jasperTemplateService;
   private final JasperReportsViewService jasperReportsViewService;
+  private final PermissionService permissionService;
 
   @Value("${dateTimeFormat}")
   private String dateTimeFormat;
@@ -82,6 +84,10 @@ public class GenerateReportController extends BaseController {
   @PostMapping
   public ResponseEntity<byte[]> generateReport(@RequestBody GenerateReportDto request)
       throws ReportingException, JasperReportViewException {
+    // the payload is a pre-compiled, serialized JasperReport (executable bytecode + SQL),
+    // so only other services may call this endpoint
+    permissionService.canGenerateReports();
+
     String templateName = request.getName();
     Map<String, Object> params = new HashMap<>(request.getParams());
 
