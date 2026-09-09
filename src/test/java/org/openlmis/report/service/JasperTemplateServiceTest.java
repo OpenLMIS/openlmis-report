@@ -29,6 +29,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.openlmis.report.i18n.AuthorizationMessageKeys.ERROR_RIGHT_NOT_FOUND;
@@ -44,6 +45,7 @@ import static org.powermock.api.mockito.PowerMockito.doNothing;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.awt.image.BufferedImage;
@@ -155,6 +157,8 @@ public class JasperTemplateServiceTest {
   private static final String HEADER_CONFIG_PROPERTIES = "/config/reports/header_config.properties";
   private static final String GLOBAL_HEADER_LANDSCAPE = "GlobalHeaderLandscape";
   private static final String GLOBAL_HEADER_PORTRAIT = "GlobalHeaderPortrait";
+  private static final String GLOBAL_HEADER_PORTRAIT_PATH =
+      "/config/reports/GlobalHeaderPortrait.jrxml";
   private static final String DESC = "desc";
   private static final String USERS_MANAGE = "USERS_MANAGE";
   private static final String JAVA_LANG_STRING = "java.lang.String";
@@ -949,7 +953,7 @@ public class JasperTemplateServiceTest {
     tempJrxml.deleteOnExit();
 
     File mockHeaderFile = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+    whenNew(File.class).withArguments(GLOBAL_HEADER_PORTRAIT_PATH)
         .thenReturn(mockHeaderFile);
     when(mockHeaderFile.exists()).thenReturn(true);
     when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
@@ -995,7 +999,7 @@ public class JasperTemplateServiceTest {
     }
 
     File mockHeaderFile = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+    whenNew(File.class).withArguments(GLOBAL_HEADER_PORTRAIT_PATH)
         .thenReturn(mockHeaderFile);
     when(mockHeaderFile.exists()).thenReturn(true);
     when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
@@ -1023,6 +1027,48 @@ public class JasperTemplateServiceTest {
     assertEquals(mockCompiledHeader, result.get(HEADER_PARAM_NAME));
     assertEquals("Test Title", result.get("title"));
     assertNull(result.get("logoImage"));
+  }
+
+  @Test
+  public void getGlobalHeaderShouldCacheCompiledHeader() throws Exception {
+    JasperReport parentReport = mock(JasperReport.class);
+    JRParameter headerParam = mock(JRParameter.class);
+    when(headerParam.getName()).thenReturn(HEADER_PARAM_NAME);
+    when(parentReport.getParameters()).thenReturn(new JRParameter[]{headerParam});
+    when(parentReport.getOrientationValue()).thenReturn(OrientationEnum.PORTRAIT);
+
+    File mockConfigDir = mock(File.class);
+    whenNew(File.class).withArguments(CONFIG_PATH_CONST).thenReturn(mockConfigDir);
+    when(mockConfigDir.exists()).thenReturn(true);
+    when(mockConfigDir.isDirectory()).thenReturn(true);
+
+    File tempJrxml = File.createTempFile(GLOBAL_HEADER_PORTRAIT, JRXML_EXTENSION);
+    tempJrxml.deleteOnExit();
+
+    File mockHeaderFile = mock(File.class);
+    whenNew(File.class).withArguments(GLOBAL_HEADER_PORTRAIT_PATH)
+        .thenReturn(mockHeaderFile);
+    when(mockHeaderFile.exists()).thenReturn(true);
+    when(mockHeaderFile.toPath()).thenReturn(tempJrxml.toPath());
+
+    JasperReport mockCompiledHeader = mock(JasperReport.class);
+    mockStatic(JasperCompileManager.class);
+    when(JasperCompileManager.compileReport(any(InputStream.class)))
+        .thenReturn(mockCompiledHeader);
+
+    File mockConfigFile = mock(File.class);
+    whenNew(File.class).withArguments(HEADER_CONFIG_PROPERTIES)
+        .thenReturn(mockConfigFile);
+    when(mockConfigFile.exists()).thenReturn(false);
+
+    jasperTemplateService.getMapSubreportGlobalHeaderParameters(parentReport);
+    Map<String, Object> secondResult = jasperTemplateService
+        .getMapSubreportGlobalHeaderParameters(parentReport);
+
+    // second generation is served from the cache - no recompilation
+    assertEquals(mockCompiledHeader, secondResult.get(HEADER_PARAM_NAME));
+    verifyStatic(JasperCompileManager.class, times(1));
+    JasperCompileManager.compileReport(any(InputStream.class));
   }
 
   @Test
@@ -1110,7 +1156,7 @@ public class JasperTemplateServiceTest {
     when(mockConfigDir.isDirectory()).thenReturn(true);
 
     File mockHeaderFile = mock(File.class);
-    whenNew(File.class).withArguments("/config/reports/GlobalHeaderPortrait.jrxml")
+    whenNew(File.class).withArguments(GLOBAL_HEADER_PORTRAIT_PATH)
         .thenReturn(mockHeaderFile);
     when(mockHeaderFile.exists()).thenReturn(false);
 

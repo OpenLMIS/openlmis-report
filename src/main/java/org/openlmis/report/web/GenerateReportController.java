@@ -142,9 +142,9 @@ public class GenerateReportController extends BaseController {
       params.putAll(jasperTemplateService.getLocaleBundleParameters(lang));
       params.putAll(jasperTemplateService.getMapSubreportGlobalHeaderParameters(templateReport));
     } catch (MalformedURLException e) {
-      LOGGER.debug("Cannot load translation bundle for {}", templateName);
+      LOGGER.warn("Cannot load translation bundle for {}", templateName, e);
     } catch (JRException | IOException ex) {
-      LOGGER.debug("Cannot load GlobalHeaderTemplate for {}", templateName);
+      LOGGER.warn("Cannot load GlobalHeaderTemplate for {}", templateName, ex);
     }
   }
 

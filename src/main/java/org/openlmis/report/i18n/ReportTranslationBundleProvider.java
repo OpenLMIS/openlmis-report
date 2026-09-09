@@ -36,8 +36,10 @@ import org.springframework.stereotype.Component;
  * {@value #DEPLOYMENT_BUNDLE_DIR}. A deployment override wins only for keys whose value actually
  * differs from the shipped English source - this lets a deployment change specific labels (in any
  * locale) while a leftover full English copy in the override directory cannot mask the classpath
- * translations for non-English locales. The merged bundle is cached per locale and only rebuilt on
- * redeploy/restart.
+ * translations for non-English locales. Bundles are resolved without the JVM default-locale
+ * fallback, so a locale with no translation file deterministically falls back to the English base
+ * bundle regardless of the locale the container happens to run under. The merged bundle is cached
+ * per locale and only rebuilt on redeploy/restart.
  */
 @Component
 public class ReportTranslationBundleProvider {
@@ -45,6 +47,11 @@ public class ReportTranslationBundleProvider {
   private static final String RESOURCE_BUNDLE_BASE_NAME = "report_translations";
   private static final String RESOURCE_BUNDLE_CLASSPATH = "resourceBundles/report_translations";
   private static final String DEPLOYMENT_BUNDLE_DIR = "/config/reports/resourceBundles";
+
+  // no JVM default-locale fallback: an unsupported locale falls straight to the base
+  // (English) properties file instead of whatever locale the JVM happens to default to
+  private static final ResourceBundle.Control BUNDLE_CONTROL =
+      ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES);
 
   private final Map<Locale, ResourceBundle> cache = new ConcurrentHashMap<>();
 
@@ -84,7 +91,8 @@ public class ReportTranslationBundleProvider {
       try {
         URL[] urls = {resourceBundleDir.toURI().toURL()};
         try (URLClassLoader externalLoader = new URLClassLoader(urls)) {
-          return ResourceBundle.getBundle(RESOURCE_BUNDLE_BASE_NAME, locale, externalLoader);
+          return ResourceBundle.getBundle(
+              RESOURCE_BUNDLE_BASE_NAME, locale, externalLoader, BUNDLE_CONTROL);
         }
       } catch (IOException | MissingResourceException e) {
         return null;
@@ -101,7 +109,7 @@ public class ReportTranslationBundleProvider {
    */
   private ResourceBundle loadClasspathBundle(Locale locale) {
     try {
-      return ResourceBundle.getBundle(RESOURCE_BUNDLE_CLASSPATH, locale);
+      return ResourceBundle.getBundle(RESOURCE_BUNDLE_CLASSPATH, locale, BUNDLE_CONTROL);
     } catch (MissingResourceException e) {
       return null;
     }
