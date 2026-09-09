@@ -71,7 +71,8 @@ public class ReportTranslationBundleProviderTest {
     when(mockDir.exists()).thenReturn(false);
 
     mockStatic(ResourceBundle.class);
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenThrow(
             new MissingResourceException(MISSING, RESOURCE_BUNDLE_NAME, RESOURCE_BUNDLE_KEY));
 
@@ -86,7 +87,8 @@ public class ReportTranslationBundleProviderTest {
 
     ResourceBundle classpathBundle = mock(ResourceBundle.class);
     mockStatic(ResourceBundle.class);
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenReturn(classpathBundle);
 
     assertEquals(classpathBundle, provider.getBundle(Locale.ENGLISH));
@@ -103,10 +105,11 @@ public class ReportTranslationBundleProviderTest {
     ResourceBundle classpathBundle = mock(ResourceBundle.class);
     mockStatic(ResourceBundle.class);
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
-        any(URLClassLoader.class)))
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
         .thenThrow(
             new MissingResourceException(MISSING, RESOURCE_BUNDLE_NAME, RESOURCE_BUNDLE_KEY));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenReturn(classpathBundle);
 
     assertEquals(classpathBundle, provider.getBundle(Locale.FRENCH));
@@ -122,10 +125,11 @@ public class ReportTranslationBundleProviderTest {
 
     mockStatic(ResourceBundle.class);
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
-        any(URLClassLoader.class)))
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
         .thenThrow(
             new MissingResourceException(MISSING, RESOURCE_BUNDLE_NAME, RESOURCE_BUNDLE_KEY));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenThrow(
             new MissingResourceException(MISSING, RESOURCE_BUNDLE_NAME, RESOURCE_BUNDLE_KEY));
 
@@ -150,8 +154,10 @@ public class ReportTranslationBundleProviderTest {
 
     mockStatic(ResourceBundle.class);
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
-        any(URLClassLoader.class))).thenReturn(bundleOf(deploymentEntries));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
+        .thenReturn(bundleOf(deploymentEntries));
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(classpathEntries));
 
     ResourceBundle merged = provider.getBundle(Locale.FRENCH);
@@ -183,12 +189,15 @@ public class ReportTranslationBundleProviderTest {
     overrideEntries.put(SHARED_KEY, "Facility"); // leftover English copy, not a real override
 
     mockStatic(ResourceBundle.class);
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(spanish)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(spanish),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(spanishEntries));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.ROOT)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.ROOT),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(englishEntries));
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), eq(spanish),
-        any(URLClassLoader.class))).thenReturn(bundleOf(overrideEntries));
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
+        .thenReturn(bundleOf(overrideEntries));
 
     ResourceBundle merged = provider.getBundle(spanish);
 
@@ -216,12 +225,15 @@ public class ReportTranslationBundleProviderTest {
     overrideEntries.put(GLOBAL_HEADER_TITLE, "OpenLMIS TEST TITLE");
 
     mockStatic(ResourceBundle.class);
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(spanish)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(spanish),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(spanishEntries));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.ROOT)))
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.ROOT),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(englishEntries));
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), eq(spanish),
-        any(URLClassLoader.class))).thenReturn(bundleOf(overrideEntries));
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
+        .thenReturn(bundleOf(overrideEntries));
 
     ResourceBundle merged = provider.getBundle(spanish);
 
@@ -244,8 +256,10 @@ public class ReportTranslationBundleProviderTest {
 
     mockStatic(ResourceBundle.class);
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
-        any(URLClassLoader.class))).thenReturn(bundleOf(entries));
-    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class)))
+        any(URLClassLoader.class), any(ResourceBundle.Control.class)))
+        .thenReturn(bundleOf(entries));
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class)))
         .thenReturn(bundleOf(entries));
 
     provider.getBundle(Locale.FRENCH);
@@ -253,8 +267,25 @@ public class ReportTranslationBundleProviderTest {
 
     // second call for the same locale is served from cache - the deployment lookup runs only once
     verifyStatic(ResourceBundle.class, times(1));
-    ResourceBundle.getBundle(
-        eq(RESOURCE_BUNDLE_NAME), any(Locale.class), any(URLClassLoader.class));
+    ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_NAME), any(Locale.class),
+        any(URLClassLoader.class), any(ResourceBundle.Control.class));
+  }
+
+  @Test
+  public void getBundleShouldResolveBundlesWithoutJvmDefaultLocaleFallback() throws Exception {
+    File mockDir = mock(File.class);
+    whenNew(File.class).withArguments(DEPLOYMENT_DIR).thenReturn(mockDir);
+    when(mockDir.exists()).thenReturn(false);
+
+    mockStatic(ResourceBundle.class);
+    when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), any(Locale.class),
+        any(ResourceBundle.Control.class))).thenReturn(bundleOf(new HashMap<>()));
+
+    provider.getBundle(Locale.GERMAN);
+
+    verifyStatic(ResourceBundle.class);
+    ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.GERMAN),
+        eq(ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES)));
   }
 
   private static ResourceBundle bundleOf(Map<String, Object> entries) {

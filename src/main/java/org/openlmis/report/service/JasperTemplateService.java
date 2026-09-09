@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -85,6 +86,8 @@ public class JasperTemplateService {
   private static final String DEFAULT_REPORT_TYPE = "Consistency Report";
   private static final String[] ALLOWED_FILETYPES = {"jrxml"};
   private static final String CONFIG_PATH = "/config/reports/";
+
+  private final Map<String, JasperReport> globalHeaderCache = new ConcurrentHashMap<>();
 
   @Autowired
   private ReportTranslationBundleProvider translationBundleProvider;
@@ -280,17 +283,30 @@ public class JasperTemplateService {
 
     Map<String, Object> parameters = new HashMap<>();
     File headerFile = new File(CONFIG_PATH + headerName + ".jrxml");
-    if (headerFile.exists()) {
-      try (InputStream is = Files.newInputStream(headerFile.toPath())) {
-        JasperReport globalHeader = JasperCompileManager.compileReport(is);
-        parameters.put("headerTemplate", globalHeader);
-      }
-    } else {
+    if (!headerFile.exists()) {
       return Collections.emptyMap();
     }
+    parameters.put("headerTemplate", getCompiledGlobalHeader(headerName, headerFile));
 
     parameters.putAll(injectDynamicHeaderParams());
     return parameters;
+  }
+
+  /**
+   * Compiling the global header on every generation is expensive, so the compiled report is
+   * cached per header variant (landscape/portrait) for the service lifetime - /config/reports
+   * is populated from the service-configuration image at startup and cannot change at runtime.
+   */
+  private JasperReport getCompiledGlobalHeader(String headerName, File headerFile)
+      throws JRException, IOException {
+    JasperReport cached = globalHeaderCache.get(headerName);
+    if (cached == null) {
+      try (InputStream is = Files.newInputStream(headerFile.toPath())) {
+        cached = JasperCompileManager.compileReport(is);
+      }
+      globalHeaderCache.put(headerName, cached);
+    }
+    return cached;
   }
 
   /**
