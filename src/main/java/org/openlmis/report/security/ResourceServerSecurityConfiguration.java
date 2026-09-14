@@ -76,6 +76,7 @@ public class ResourceServerSecurityConfiguration implements ResourceServerConfig
         .authorizeRequests()
         .antMatchers(
             "/actuator/health",
+            "/actuator/prometheus",
             "/report",
             "/webjars/**",
             "/report/webjars/**",
