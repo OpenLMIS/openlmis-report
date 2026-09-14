@@ -15,8 +15,11 @@
 
 package org.openlmis.report.i18n;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -59,6 +62,8 @@ public class ReportTranslationBundleProviderTest {
   private static final String DUMMY_FILE_URI = "file://dummy";
   private static final String MISSING = "missing";
   private static final String ESTABLECIMIENTO = "Establecimiento";
+  private static final String FACILITY = "Facility";
+  private static final String OPENLMIS = "OpenLMIS";
   private static final String GLOBAL_HEADER_TITLE = "report.globalHeader.title";
 
   private final ReportTranslationBundleProvider provider = new ReportTranslationBundleProvider();
@@ -184,9 +189,9 @@ public class ReportTranslationBundleProviderTest {
     Map<String, Object> spanishEntries = new HashMap<>();
     spanishEntries.put(SHARED_KEY, ESTABLECIMIENTO);
     Map<String, Object> englishEntries = new HashMap<>();
-    englishEntries.put(SHARED_KEY, "Facility");
+    englishEntries.put(SHARED_KEY, FACILITY);
     Map<String, Object> overrideEntries = new HashMap<>();
-    overrideEntries.put(SHARED_KEY, "Facility"); // leftover English copy, not a real override
+    overrideEntries.put(SHARED_KEY, FACILITY); // leftover English copy, not a real override
 
     mockStatic(ResourceBundle.class);
     when(ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(spanish),
@@ -216,11 +221,11 @@ public class ReportTranslationBundleProviderTest {
     when(mockDir.toURI()).thenReturn(new java.net.URI(DUMMY_FILE_URI));
 
     Map<String, Object> spanishEntries = new HashMap<>();
-    spanishEntries.put(GLOBAL_HEADER_TITLE, "OpenLMIS");
+    spanishEntries.put(GLOBAL_HEADER_TITLE, OPENLMIS);
     spanishEntries.put(SHARED_KEY, ESTABLECIMIENTO);
     Map<String, Object> englishEntries = new HashMap<>();
-    englishEntries.put(GLOBAL_HEADER_TITLE, "OpenLMIS");
-    englishEntries.put(SHARED_KEY, "Facility");
+    englishEntries.put(GLOBAL_HEADER_TITLE, OPENLMIS);
+    englishEntries.put(SHARED_KEY, FACILITY);
     Map<String, Object> overrideEntries = new HashMap<>();
     overrideEntries.put(GLOBAL_HEADER_TITLE, "OpenLMIS TEST TITLE");
 
@@ -286,6 +291,73 @@ public class ReportTranslationBundleProviderTest {
     verifyStatic(ResourceBundle.class);
     ResourceBundle.getBundle(eq(RESOURCE_BUNDLE_CLASSPATH), eq(Locale.GERMAN),
         eq(ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES)));
+  }
+
+  @Test
+  public void classifyOverridesShouldIgnoreKeysThatRepeatTheEnglishSource() {
+    // The production failure mode: the override directory holds a copy of the base bundle. Every
+    // key whose value still matches the English source is discarded, so it cannot mask the
+    // classpath translation of another locale.
+    Map<String, Object> englishEntries = new HashMap<>();
+    englishEntries.put(SHARED_KEY, FACILITY);
+    englishEntries.put(GLOBAL_HEADER_TITLE, OPENLMIS);
+    Map<String, Object> overrideEntries = new HashMap<>();
+    overrideEntries.put(SHARED_KEY, FACILITY);
+    overrideEntries.put(GLOBAL_HEADER_TITLE, OPENLMIS);
+
+    ReportTranslationBundleProvider.OverrideSummary summary =
+        ReportTranslationBundleProvider.classifyOverrides(
+            bundleOf(overrideEntries), bundleOf(englishEntries));
+
+    assertTrue(summary.getApplied().isEmpty());
+    assertEquals(asList(GLOBAL_HEADER_TITLE, SHARED_KEY), summary.getIgnored());
+  }
+
+  @Test
+  public void classifyOverridesShouldApplyDeploymentKeysAbsentFromTheBase() {
+    // A deployment-only key (no such key in the base bundle) is always a real override.
+    Map<String, Object> englishEntries = new HashMap<>();
+    englishEntries.put(SHARED_KEY, FACILITY);
+    Map<String, Object> overrideEntries = new HashMap<>();
+    overrideEntries.put(RESOURCE_BUNDLE_KEY, "Deployment only");
+
+    ReportTranslationBundleProvider.OverrideSummary summary =
+        ReportTranslationBundleProvider.classifyOverrides(
+            bundleOf(overrideEntries), bundleOf(englishEntries));
+
+    assertEquals(singletonList(RESOURCE_BUNDLE_KEY), summary.getApplied());
+    assertTrue(summary.getIgnored().isEmpty());
+  }
+
+  @Test
+  public void classifyOverridesShouldApplyStaleBaseKeyWhoseWordingDiffers() {
+    // Documents the residual risk of the current rule: an override copied from an OLDER base
+    // release differs from today's English source, so it is treated as a deliberate override and
+    // applied to every locale. Trimming the override directory (not this code) is what prevents
+    // it; the WARN emitted by logOverrides is what makes it visible.
+    Map<String, Object> englishEntries = new HashMap<>();
+    englishEntries.put(SHARED_KEY, FACILITY);
+    Map<String, Object> overrideEntries = new HashMap<>();
+    overrideEntries.put(SHARED_KEY, "Facility:");
+
+    ReportTranslationBundleProvider.OverrideSummary summary =
+        ReportTranslationBundleProvider.classifyOverrides(
+            bundleOf(overrideEntries), bundleOf(englishEntries));
+
+    assertEquals(singletonList(SHARED_KEY), summary.getApplied());
+    assertTrue(summary.getIgnored().isEmpty());
+  }
+
+  @Test
+  public void classifyOverridesShouldApplyEverythingWhenEnglishSourceIsMissing() {
+    Map<String, Object> overrideEntries = new HashMap<>();
+    overrideEntries.put(SHARED_KEY, ESTABLECIMIENTO);
+
+    ReportTranslationBundleProvider.OverrideSummary summary =
+        ReportTranslationBundleProvider.classifyOverrides(bundleOf(overrideEntries), null);
+
+    assertEquals(singletonList(SHARED_KEY), summary.getApplied());
+    assertTrue(summary.getIgnored().isEmpty());
   }
 
   private static ResourceBundle bundleOf(Map<String, Object> entries) {

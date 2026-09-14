@@ -19,14 +19,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -43,6 +47,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ReportTranslationBundleProvider {
+
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(ReportTranslationBundleProvider.class);
 
   private static final String RESOURCE_BUNDLE_BASE_NAME = "report_translations";
   private static final String RESOURCE_BUNDLE_CLASSPATH = "resourceBundles/report_translations";
@@ -76,7 +83,7 @@ public class ReportTranslationBundleProvider {
     if (classpath == null) {
       return overrides;
     }
-    return mergeBundles(classpath, overrides, loadClasspathBundle(Locale.ROOT));
+    return mergeBundles(classpath, overrides, loadClasspathBundle(Locale.ROOT), locale);
   }
 
   /**
@@ -124,17 +131,84 @@ public class ReportTranslationBundleProvider {
    * non-English locale (e.g. English "Facility" must not mask Spanish "Establecimiento").
    */
   private ResourceBundle mergeBundles(ResourceBundle classpath, ResourceBundle overrides,
-                                      ResourceBundle englishBase) {
+                                      ResourceBundle englishBase, Locale locale) {
     Map<String, Object> merged = new HashMap<>();
     for (String key : Collections.list(classpath.getKeys())) {
       merged.put(key, classpath.getObject(key));
     }
+    OverrideSummary summary = classifyOverrides(overrides, englishBase);
+    for (String key : summary.getApplied()) {
+      merged.put(key, overrides.getObject(key));
+    }
+    logOverrides(locale, summary);
+    return new MapResourceBundle(merged);
+  }
+
+  /**
+   * Split the override bundle's keys into the ones that are applied over the classpath
+   * translations and the ones that are discarded because they merely repeat the shipped English
+   * source. Kept separate from the merge itself so the outcome can be asserted directly.
+   */
+  static OverrideSummary classifyOverrides(ResourceBundle overrides, ResourceBundle englishBase) {
+    List<String> applied = new ArrayList<>();
+    List<String> ignored = new ArrayList<>();
+
     for (String key : Collections.list(overrides.getKeys())) {
       if (isRealOverride(key, overrides, englishBase)) {
-        merged.put(key, overrides.getObject(key));
+        applied.add(key);
+      } else {
+        ignored.add(key);
       }
     }
-    return new MapResourceBundle(merged);
+    Collections.sort(applied);
+    Collections.sort(ignored);
+
+    return new OverrideSummary(applied, ignored);
+  }
+
+  /**
+   * Report what the deployment override directory actually did to the shipped translations. The
+   * merged bundle is built once per locale, so this runs on the first report generated for that
+   * locale after a restart. Both outcomes are worth surfacing: the applied keys are the
+   * deployment's deliberate deviation from the Transifex base, and the ignored ones mean the
+   * override directory holds a copy of the base bundle, which is usually a leftover that is one
+   * release away from masking a base translation.
+   */
+  private void logOverrides(Locale locale, OverrideSummary summary) {
+    if (!summary.getApplied().isEmpty()) {
+      LOGGER.warn("Deployment report translation override for locale [{}] applied {} key(s): {}",
+          locale, summary.getApplied().size(), summary.getApplied());
+    }
+    if (!summary.getIgnored().isEmpty()) {
+      LOGGER.warn("Deployment report translation override for locale [{}] ignored {} key(s) whose "
+              + "value is identical to the shipped English source - this is a leftover copy of the "
+              + "base bundle and should be trimmed from the override directory (enable debug "
+              + "logging on this class to list the keys)",
+          locale, summary.getIgnored().size());
+      LOGGER.debug("Ignored report translation override keys for locale [{}]: {}",
+          locale, summary.getIgnored());
+    }
+  }
+
+  /**
+   * The outcome of comparing a deployment override bundle against the shipped English source.
+   */
+  static final class OverrideSummary {
+    private final List<String> applied;
+    private final List<String> ignored;
+
+    OverrideSummary(List<String> applied, List<String> ignored) {
+      this.applied = applied;
+      this.ignored = ignored;
+    }
+
+    List<String> getApplied() {
+      return applied;
+    }
+
+    List<String> getIgnored() {
+      return ignored;
+    }
   }
 
   private static boolean isRealOverride(String key, ResourceBundle overrides,
