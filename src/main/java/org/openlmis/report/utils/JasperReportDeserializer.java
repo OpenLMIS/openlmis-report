@@ -54,6 +54,14 @@ public class JasperReportDeserializer {
           "[Ljava.util.*",
           "[Ljava.lang.*",
           "[Ljava.math.*",
+          // two-dimensional arrays are matched by their own "[[L" prefix, not by the
+          // one-dimensional patterns above: a crosstab stores its cells as
+          // JRCrosstabCell[][], so without these a compiled crosstab is rejected
+          "[[Lnet.sf.jasperreports.*",
+          "[[Ljava.awt.*",
+          "[[Ljava.util.*",
+          "[[Ljava.lang.*",
+          "[[Ljava.math.*",
           "[B"
       );
       return (JasperReport) vois.readObject();

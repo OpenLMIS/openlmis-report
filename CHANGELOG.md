@@ -2,11 +2,13 @@ Upcoming Version / (WIP)
 ==================
 
 Improvements:
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): The global header template is compiled once and cached.
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundles are resolved without the JVM default-locale fallback - a locale with no translation file now deterministically falls back to the English base bundle.
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): The service now logs, per locale, which deployment translation override keys were applied.
+* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translations and customizable global header.
+  * Report translation bundle sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Separator style stays localizable.
+  * Translation bundles are resolved without the JVM default-locale fallback - a locale with no translation file now deterministically falls back to the English base bundle.
+  * Merged translation bundles and the compiled global header template are cached for the service lifetime, so a change under /config/reports needs the configuration image rebuilt and the service restarted.
+  * The service logs, per locale, which deployment translation override keys were applied and how many were discarded for repeating the English source.
+  * Multi-dimensional arrays are accepted by the report deserialization allowlist. A crosstab stores its cells as JRCrosstabCell[][], and the one-dimensional "[L" patterns do not match "[[L", so compiled crosstab reports were rejected as invalid.
 * [OLMIS-8176](https://openlmis.atlassian.net/browse/OLMIS-8176): Added the Pack Size report translations (report.column.packSize, report.header.packSize) used by the new Pack Size column in the stock reports.
-* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Report translation bundle now sourced from Transifex (openlmis-report.report-translations resource) and merged with an optional deployment-specific bundle mounted under /config/reports/resourceBundles. Translation bundle is cached. Separator style stays localizable.
 * [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Migrated the SonarCloud analysis to Java 21 by running it through the SonarQube scan action instead of the Gradle plugin, and removed the now-unused Gradle sonar plugin and configuration.
 * [OLMIS-8280](https://openlmis.atlassian.net/browse/OLMIS-8280) Removed the axios dependency from the Consul registration script, replacing it with the native Node `http` client (no more axios security advisories to track).
 * Stabilized consul registration and health checks
