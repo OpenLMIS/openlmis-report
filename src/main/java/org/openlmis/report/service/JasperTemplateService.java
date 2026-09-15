@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -56,7 +57,6 @@ import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.type.OrientationEnum;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.openlmis.report.domain.JasperTemplate;
 import org.openlmis.report.domain.JasperTemplateParameter;
@@ -73,6 +73,7 @@ import org.openlmis.report.repository.JasperTemplateRepository;
 import org.openlmis.report.repository.ReportCategoryRepository;
 import org.openlmis.report.repository.ReportImageRepository;
 import org.openlmis.report.service.referencedata.RightReferenceDataService;
+import org.openlmis.report.utils.JasperReportDeserializer;
 import org.openlmis.report.utils.Message;
 import org.openlmis.report.utils.ReportingValidationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,9 @@ public class JasperTemplateService {
 
   @Autowired
   private ReportTranslationBundleProvider translationBundleProvider;
+
+  @Autowired
+  private JasperReportDeserializer reportDeserializer;
 
   @Autowired
   private JasperTemplateRepository jasperTemplateRepository;
@@ -363,12 +367,12 @@ public class JasperTemplateService {
    * @throws ReportingException the reporting exception
    */
   public JasperReport loadReport(byte[] template) throws ReportingException {
-    if (template.length == 0) {
+    if (template == null || template.length == 0) {
       return null;
     }
-    try (InputStream is = new ByteArrayInputStream(template)) {
-      return (JasperReport) JRLoader.loadObject(is);
-    } catch (JRException ex) {
+    try {
+      return reportDeserializer.deserialize(template);
+    } catch (InvalidClassException | ClassNotFoundException | ClassCastException ex) {
       throw new ReportingException(ex, ERROR_REPORTING_FILE_INVALID);
     } catch (IOException ex) {
       throw new ReportingException(ex, ERROR_REPORTING_IO, ex.getMessage());

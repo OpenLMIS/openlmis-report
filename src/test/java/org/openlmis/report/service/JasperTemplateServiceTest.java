@@ -69,14 +69,12 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JRPropertiesMap;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.type.OrientationEnum;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -101,6 +99,7 @@ import org.openlmis.report.repository.JasperTemplateRepository;
 import org.openlmis.report.repository.ReportCategoryRepository;
 import org.openlmis.report.repository.ReportImageRepository;
 import org.openlmis.report.service.referencedata.RightReferenceDataService;
+import org.openlmis.report.utils.JasperReportDeserializer;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -112,7 +111,6 @@ import org.springframework.web.multipart.MultipartFile;
 @PrepareForTest({
     JasperTemplateService.class,
     JasperCompileManager.class,
-    JRLoader.class,
     java.nio.file.Files.class
 })
 @SuppressWarnings("PMD.TooManyMethods")
@@ -132,6 +130,9 @@ public class JasperTemplateServiceTest {
 
   @Mock
   private ReportTranslationBundleProvider translationBundleProvider;
+
+  @Mock
+  private JasperReportDeserializer reportDeserializer;
 
   @InjectMocks
   private JasperTemplateService jasperTemplateService;
@@ -880,8 +881,7 @@ public class JasperTemplateServiceTest {
     byte[] templateData = new byte[]{1, 2, 3};
 
     JasperReport mockReport = mock(JasperReport.class);
-    mockStatic(JRLoader.class);
-    when(JRLoader.loadObject(any(InputStream.class))).thenReturn(mockReport);
+    when(reportDeserializer.deserialize(any(byte[].class))).thenReturn(mockReport);
 
     JasperReport result = jasperTemplateService.loadReport(templateData);
 
@@ -890,8 +890,8 @@ public class JasperTemplateServiceTest {
 
   @Test
   public void loadReportWithByteArrayShouldThrowExceptionForInvalidReportFile() throws Exception {
-    mockStatic(JRLoader.class);
-    when(JRLoader.loadObject(any(InputStream.class))).thenThrow(new JRException("Invalid file"));
+    when(reportDeserializer.deserialize(any(byte[].class)))
+        .thenThrow(new ClassNotFoundException("Invalid file"));
 
     expectedException.expect(ReportingException.class);
     expectedException.expectMessage(ERROR_REPORTING_FILE_INVALID);
@@ -913,8 +913,7 @@ public class JasperTemplateServiceTest {
     when(template.getData()).thenReturn(templateData);
 
     JasperReport mockReport = mock(JasperReport.class);
-    mockStatic(JRLoader.class);
-    when(JRLoader.loadObject(any(InputStream.class))).thenReturn(mockReport);
+    when(reportDeserializer.deserialize(any(byte[].class))).thenReturn(mockReport);
 
     JasperReport result = jasperTemplateService.loadReport(template);
 
@@ -927,8 +926,8 @@ public class JasperTemplateServiceTest {
     byte[] templateData = new byte[]{1, 2, 3};
     when(template.getData()).thenReturn(templateData);
 
-    mockStatic(JRLoader.class);
-    when(JRLoader.loadObject(any(InputStream.class))).thenThrow(new JRException("Invalid file"));
+    when(reportDeserializer.deserialize(any(byte[].class)))
+        .thenThrow(new ClassNotFoundException("Invalid file"));
 
     expectedException.expect(ReportingException.class);
     expectedException.expectMessage(ERROR_REPORTING_FILE_INVALID);
