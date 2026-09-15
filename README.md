@@ -89,6 +89,57 @@ https://github.com/OpenLMIS/openlmis-template-service/blob/master/README.md#logg
 See the Internationalization section in the Service Template README at 
 https://github.com/OpenLMIS/openlmis-template-service/blob/master/README.md#internationalization.
 
+#### Report translations
+
+The `$R{...}` keys used by JasperReports templates live in a bundle of their own, separate from
+the service's API messages. Both are Transifex resources, registered by `build.sh`:
+
+| bundle | English source file | holds |
+|---|---|---|
+| `messages` | `src/main/resources/messages_en.properties` | service API messages |
+| `report_translations` | `src/main/resources/resourceBundles/report_translations.properties` | report template labels |
+
+Add a new key to the **English source file only**, never to a deployment override — a key that
+exists only in an override reaches that one deployment and no other locale ever receives it. The
+per-locale files (`report_translations_<lang>.properties`, `messages_<lang>.properties`) are
+pulled during the build and are **gitignored**; correct a translation on Transifex rather than in
+the repository.
+
+Label values carry no punctuation of their own. Separators come from patterns, so a label can be
+reused in several positions and each locale can choose its own spacing:
+
+```properties
+report.pattern.label={0}:
+report.pattern.labelledValue={0}: {1}
+report.header.facility=Facility
+```
+
+For a requested locale the bundle is resolved in two steps:
+
+1. the Transifex-managed base bundle shipped in this service's jar, then
+2. the optional deployment override mounted at `/config/reports/resourceBundles`.
+
+An override value is applied only when it **differs from the shipped English source**. A value
+identical to the English source is treated as "not a real override", so a leftover copy of the
+base bundle sitting in the override directory cannot mask another locale's shipped translation —
+English "Facility" must not hide Spanish "Establecimiento". Note the limit of that rule: a copy
+taken from an *older* release does differ from today's source, so it is applied. Keeping the
+override directory trimmed is what prevents this, and the log below is what makes it visible.
+
+On the first report generated for a locale after a restart, the service reports what the override
+directory actually did:
+
+* `Deployment report translation override for locale [xx] applied N key(s): [...]` — the
+  deployment's deliberate deviation from the base bundle.
+* `... ignored N key(s) whose value is identical to the shipped English source` — a leftover copy
+  of the base bundle that should be trimmed from the override directory. Set this class to
+  `debug` to list the keys.
+
+Locale resolution is deterministic: a locale with no translation file falls back to the English
+base bundle, never to the JVM default locale of whichever container the service happens to run
+in. Merged bundles and the compiled global header are cached for the service lifetime, so any
+change under `/config/reports/` needs the configuration image rebuilt and the service restarted.
+
 ### Debugging
 See the Debugging section in the Service Template README at
 https://github.com/OpenLMIS/openlmis-template-service/blob/master/README.md#debugging.
@@ -139,3 +190,16 @@ To see how to set environment variables through Docker Compose, see the
 ## Environment variables
 
 Environment variables common to all services are listed here: https://github.com/OpenLMIS/openlmis-template-service/blob/master/README.md#environment-variables
+
+Translation sync, read by `build.sh` at build time (not at runtime):
+
+| variable | default | meaning |
+|---|---|---|
+| `TRANSIFEX_PUSH` | `false` | push the English source files to Transifex; `ci-buildImage.sh` forces this off on any branch other than `master` |
+| `TRANSIFEX_PULL` | `true` | pull every locale before the Gradle build, so the locale files are baked into the jar |
+| `TX_TOKEN` | none | API token for the `tx` client; required for either direction |
+
+`build.sh` does not abort when the `tx` client fails. A missing `TX_TOKEN` or an unreachable
+Transifex therefore produces a **green build containing whatever bundle files happen to be on
+disk** — on a clean checkout, English only. When you mean to build without the translations, pass
+`TRANSIFEX_PULL=false` so the outcome is deliberate rather than accidental.

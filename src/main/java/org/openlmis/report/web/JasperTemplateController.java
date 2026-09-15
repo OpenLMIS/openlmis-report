@@ -213,11 +213,11 @@ public class JasperTemplateController extends BaseController {
       map.putAll(jasperTemplateService.getLocaleBundleParameters(lang));
       map.putAll(jasperTemplateService.getMapSubreportGlobalHeaderParameters(templateReport));
     } catch (ReportingException e) {
-      LOGGER.debug("Cannot compile template {}", template.getName());
+      LOGGER.warn("Cannot compile template {}", template.getName(), e);
     } catch (MalformedURLException e) {
-      LOGGER.debug("Cannot load translation bundle for {}", template.getName());
+      LOGGER.warn("Cannot load translation bundle for {}", template.getName(), e);
     } catch (JRException | IOException ex) {
-      LOGGER.debug("Cannot load GlobalHeaderTemplate for {}", template.getName());
+      LOGGER.warn("Cannot load GlobalHeaderTemplate for {}", template.getName(), ex);
     }
 
     map.put("format", format);
