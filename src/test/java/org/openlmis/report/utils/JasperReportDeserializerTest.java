@@ -45,6 +45,19 @@ public class JasperReportDeserializerTest {
     assertEquals(report.getName(), result.getName());
   }
 
+  @Test
+  public void shouldDeserializeCompiledReportContainingCrosstab() throws Exception {
+    JasperReport report;
+    try (InputStream jrxml = getClass().getResourceAsStream("/crosstab-report.jrxml")) {
+      report = JasperCompileManager.compileReport(jrxml);
+    }
+
+    JasperReport result = deserializer.deserialize(serialize(report));
+
+    assertNotNull(result);
+    assertEquals(report.getName(), result.getName());
+  }
+
   @Test(expected = InvalidClassException.class)
   public void shouldRejectPayloadWithClassOutsideAllowlist() throws Exception {
     deserializer.deserialize(serialize(new File("/tmp/not-a-report")));
