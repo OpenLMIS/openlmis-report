@@ -221,22 +221,22 @@ GROUP BY
 		<band height="150" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<printWhenExpression><![CDATA[new Boolean($V{PAGE_NUMBER}.intValue()==1)]]></printWhenExpression>
-			<textField>
-				<reportElement x="0" y="80" width="230" height="20" uuid="c99c8f1c-d3d3-4020-8541-2da7e1a48466"/>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="0" y="80" width="230" height="20" uuid="c99c8f1c-d3d3-4020-8541-2da7e1a48466"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{geographicZone} != null ? $R{report.column.geographicZone} : ($P{facilityType} != null ? $R{report.column.facilityType} : $R{report.column.facility})]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement x="432" y="80" width="208" height="20" uuid="3c6c7766-7608-4c57-a67f-e157eba14d74"/>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="432" y="80" width="208" height="20" uuid="3c6c7766-7608-4c57-a67f-e157eba14d74"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="10" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[msg($R{report.pattern.label}, $R{report.header.stockDate})]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement key="" x="640" y="80" width="161" height="20" uuid="29e1a96f-0d18-4cc4-a84a-912969b21072">
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" key="" x="640" y="80" width="161" height="20" uuid="29e1a96f-0d18-4cc4-a84a-912969b21072">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
@@ -253,31 +253,31 @@ GROUP BY
 				</graphicElement>
 			</rectangle>
 			<textField>
-				<reportElement x="0" y="100" width="230" height="20" uuid="a8565621-bd19-4b76-bd5e-280c405039c6"/>
+				<reportElement positionType="Float" x="0" y="100" width="230" height="20" uuid="a8565621-bd19-4b76-bd5e-280c405039c6"/>
 				<textFieldExpression><![CDATA[$P{geographicZone} != null ? $P{geographicZone} :
     				($P{facilityType} != null ? $P{facilityType} :
     				($P{facility} != null ? $P{facility} : "All"))]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="432" y="100" width="208" height="20" uuid="36f32e3f-b43e-458c-8724-9ea5571e0369"/>
+				<reportElement positionType="Float" x="432" y="100" width="208" height="20" uuid="36f32e3f-b43e-458c-8724-9ea5571e0369"/>
 				<textFieldExpression><![CDATA[$P{date}]]></textFieldExpression>
 			</textField>
 			<textField pattern="MMM d, yyyy">
-				<reportElement x="640" y="100" width="161" height="20" uuid="1a79bec9-bcf9-40b7-9530-86290dcd415f"/>
+				<reportElement positionType="Float" x="640" y="100" width="161" height="20" uuid="1a79bec9-bcf9-40b7-9530-86290dcd415f"/>
 				<textFieldExpression><![CDATA[new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date())]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement x="230" y="80" width="202" height="20" uuid="f8f2b3ec-4fa4-4d2e-81be-f1f31dcb5dba"/>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="230" y="80" width="202" height="20" uuid="f8f2b3ec-4fa4-4d2e-81be-f1f31dcb5dba"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="10" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.program}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="230" y="100" width="202" height="20" uuid="c88caf12-452e-4beb-846a-faadd85f251e"/>
+				<reportElement positionType="Float" x="230" y="100" width="202" height="20" uuid="c88caf12-452e-4beb-846a-faadd85f251e"/>
 				<textFieldExpression><![CDATA[$P{program} != null ? $P{program} : "All"]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="0" y="53" width="800" height="27" forecolor="#FFFFFF" uuid="b22f9636-e18f-498b-95ad-14b3e27e7276"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="24" isBold="true"/>
@@ -306,7 +306,7 @@ GROUP BY
 					<pen lineWidth="0.0"/>
 				</graphicElement>
 			</rectangle>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="0" y="0" width="80" height="30" uuid="62ec1547-2381-4a0b-9daa-5a5dd3c1bdcb"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -320,7 +320,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.facility}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="320" y="0" width="70" height="30" uuid="ad5bfe64-ad2f-4135-98c9-19422ce293ec"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -334,7 +334,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.productCode}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="80" y="0" width="79" height="30" uuid="9905daa1-61be-4f1b-96c2-4421aa897ec3"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -348,7 +348,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.geographicZone}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="159" y="0" width="81" height="30" uuid="4322400a-f8bd-42b5-a2ca-7c855ed30cc7"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -362,7 +362,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.facilityType}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="240" y="0" width="80" height="30" uuid="31a2348e-58c9-45cd-8e0c-821b47fcb882"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -376,7 +376,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.product}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="500" y="0" width="80" height="30" uuid="9cc5c9c1-9d7c-458d-b257-e547c268af13"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -390,7 +390,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.supplier}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="390" y="0" width="48" height="30" uuid="88881c0b-34a4-47e9-8f3d-e2121dac01f7"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -404,7 +404,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.lotCode}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="438" y="0" width="62" height="30" uuid="cd4cc076-9bb4-4467-9b4a-0d8604f196c4"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -418,7 +418,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.program}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="580" y="0" width="60" height="30" uuid="aab578c6-7e34-4109-8dde-54564c1f135c"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -432,7 +432,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.expiryDate}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="640" y="0" width="60" height="30" uuid="e17615fe-ca08-47af-a25e-c43093bb56ba"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -446,7 +446,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.availableStock}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="700" y="0" width="51" height="30" uuid="dc81e407-048c-4716-8281-2c4054681e6a"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -460,7 +460,7 @@ GROUP BY
 				</textElement>
 				<textFieldExpression><![CDATA[$R{report.column.netContent}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement x="751" y="0" width="50" height="30" uuid="13ba0178-20f6-4ae2-acbe-70391bc49429"/>
 				<box leftPadding="2" bottomPadding="1">
 					<pen lineWidth="1.0" lineColor="#80C7E8"/>
@@ -621,7 +621,7 @@ GROUP BY
 	</detail>
 	<pageFooter>
 		<band height="40">
-			<textField evaluationTime="Master">
+			<textField isStretchWithOverflow="true" evaluationTime="Master">
 				<reportElement x="701" y="3" width="100" height="30" uuid="f1db7f67-876a-48ce-a6d2-2fdf4b475085"/>
 				<textElement textAlignment="Right" verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA[msg($R{report.controls.pageOfPages}, $V{MASTER_CURRENT_PAGE}, $V{MASTER_TOTAL_PAGES})]]></textFieldExpression>
@@ -630,7 +630,7 @@ GROUP BY
 	</pageFooter>
 	<summary>
 		<band height="52">
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement positionType="FixRelativeToBottom" x="0" y="0" width="800" height="51" uuid="4385a89d-20a0-44c2-ad77-c2708b739727">
 					<printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()==0)]]></printWhenExpression>
 				</reportElement>
