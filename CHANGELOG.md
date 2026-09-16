@@ -28,6 +28,7 @@ Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies — dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.
 * [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report — remove SELECT DISTINCT that was hiding identical legitimate movements
+* Fix the Periodic Stock On Hand Summary header printing the literal `null` for Facility when no facility is selected. Program and Product already fell back to "All"; Facility printed the raw parameter. All three now read the fallback from `report.header.value.all` instead of a hard-coded English literal.
 
 New functionality:
 * [MW-1449](https://openlmis.atlassian.net/browse/MW-1449): Added Superset guest token endpoint for embedded dashboards. Dashboard reports now carry an optional `embeddedUuid` column referencing a Superset embedded dashboard. The new `/api/reports/superset/guest-token` endpoint exchanges an OpenLMIS user for a short-lived Superset guest token, gated by the `REPORTS_VIEW` right and a lookup against the dashboard's `embeddedUuid`.

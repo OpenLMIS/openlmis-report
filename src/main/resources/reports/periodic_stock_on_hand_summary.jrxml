@@ -361,7 +361,7 @@
 			</textField>
 			<textField>
 				<reportElement positionType="Float" x="1" y="64" width="208" height="12" uuid="a8565621-bd19-4b76-bd5e-280c405039c6"/>
-				<textFieldExpression><![CDATA[$P{facility}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{facility} != null ? $P{facility} : $R{report.header.value.all}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement positionType="Float" x="210" y="92" width="202" height="12" uuid="36f32e3f-b43e-458c-8724-9ea5571e0369"/>
@@ -381,7 +381,7 @@
 			</textField>
 			<textField>
 				<reportElement positionType="Float" x="210" y="64" width="202" height="12" uuid="c88caf12-452e-4beb-846a-faadd85f251e"/>
-				<textFieldExpression><![CDATA[$P{program} != null ? $P{program} : "All"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{program} != null ? $P{program} : $R{report.header.value.all}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true">
 				<reportElement positionType="Float" x="1" y="80" width="208" height="12" uuid="310e76de-a15d-411f-9afd-e15f5c72f549"/>
@@ -393,7 +393,7 @@
 			</textField>
 			<textField>
 				<reportElement positionType="Float" x="1" y="92" width="208" height="12" uuid="da397384-4e9b-4ad7-b920-b1b7c404822c"/>
-				<textFieldExpression><![CDATA[$P{product} != null ? $P{product} : "All"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{product} != null ? $P{product} : $R{report.header.value.all}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true">
 				<reportElement positionType="Float" x="412" y="80" width="208" height="12" uuid="f6345f1a-ff22-4a16-9a47-747482a5d628"/>
