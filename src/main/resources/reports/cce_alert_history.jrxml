@@ -77,28 +77,28 @@ WHERE cii.id = $P{inventoryItemId}::uuid]]>
 	<title>
 		<band height="90" splitType="Stretch">
 			<textField isStretchWithOverflow="true">
-				<reportElement positionType="FixRelativeToBottom" x="0" y="0" width="802" height="30" uuid="bc3874ea-c0b6-4870-bb5d-b63fd3314fee"/>
+				<reportElement x="0" y="0" width="802" height="30" uuid="bc3874ea-c0b6-4870-bb5d-b63fd3314fee"/>
 				<textElement textAlignment="Center">
 					<font size="24"/>
 				</textElement>
 			
 				<textFieldExpression><![CDATA[$R{report.title.cceAlertHistory}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement positionType="FixRelativeToBottom" x="0" y="30" width="400" height="15" uuid="6603b7c0-88ee-4ed5-8ab7-8ce1525ab34a"/>
-				<textFieldExpression><![CDATA["Equipment: " + $F{inventoryItemReferenceName}]]></textFieldExpression>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="0" y="30" width="400" height="15" uuid="6603b7c0-88ee-4ed5-8ab7-8ce1525ab34a"/>
+				<textFieldExpression><![CDATA[msg($R{report.pattern.labelledValue}, $R{report.header.equipment}, $F{inventoryItemReferenceName})]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement positionType="FixRelativeToBottom" x="0" y="45" width="400" height="15" uuid="391255e0-1e46-4c5f-8f5c-44d3476acd5b"/>
-				<textFieldExpression><![CDATA["Facility: " + $F{facilityName}]]></textFieldExpression>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="0" y="45" width="400" height="15" uuid="391255e0-1e46-4c5f-8f5c-44d3476acd5b"/>
+				<textFieldExpression><![CDATA[msg($R{report.pattern.labelledValue}, $R{report.header.facility}, $F{facilityName})]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement positionType="FixRelativeToBottom" x="0" y="60" width="400" height="15" uuid="8f145179-c938-4a8f-87f2-6ea47071508f"/>
-				<textFieldExpression><![CDATA["Program: " + $F{programName}]]></textFieldExpression>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="0" y="60" width="400" height="15" uuid="8f145179-c938-4a8f-87f2-6ea47071508f"/>
+				<textFieldExpression><![CDATA[msg($R{report.pattern.labelledValue}, $R{report.header.program}, $F{programName})]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement positionType="FixRelativeToBottom" x="0" y="75" width="400" height="15" uuid="7e71222a-5f8f-4569-a08a-c9a0d4baa75f"/>
-				<textFieldExpression><![CDATA["Generated on: " + DateTimeFormatter.ofPattern($P{dateTimeFormat}).format(ZonedDateTime.now()) + " " + $P{timeZoneId}]]></textFieldExpression>
+			<textField isStretchWithOverflow="true">
+				<reportElement positionType="Float" x="0" y="75" width="400" height="15" uuid="7e71222a-5f8f-4569-a08a-c9a0d4baa75f"/>
+				<textFieldExpression><![CDATA[msg($R{report.pattern.labelledValue}, $R{report.header.generatedOn}, DateTimeFormatter.ofPattern($P{dateTimeFormat}).format(ZonedDateTime.now()) + " " + $P{timeZoneId})]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
