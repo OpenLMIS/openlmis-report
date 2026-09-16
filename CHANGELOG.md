@@ -1,4 +1,4 @@
-Upcoming Version / (WIP)
+1.6.0-SNAPSHOT (WIP)
 ==================
 
 Improvements:
@@ -20,21 +20,21 @@ Improvements:
 * [OLMIS-8231](https://openlmis.atlassian.net/browse/OLMIS-8231): Preserve Jasper template parameters order as declared in the .jrxml file.
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Add override query parameter to Jasper template upload to safely replace an existing template.
 * Enabled JaCoCo offline instrumentation so coverage of classes exercised through PowerMock (`@PrepareForTest` / `whenNew` / `spy`) is recorded; these were previously reported as near-zero because PowerMock's classloader bypasses the on-the-fly agent.
+* [ODRC-130](https://openlmis.atlassian.net/browse/ODRC-130): Native reports changes and report translations updates.
+* [MW-1471](https://openlmis.atlassian.net/browse/MW-1471): Exposed the Prometheus metrics endpoint at `/actuator/prometheus`.
 
 Security:
 * [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Restricted `POST /api/reports/generate` to service-level tokens (the trusted client).
 
 Bugs:
 * [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix template override wiping parameter API metadata (selectExpression, selectMethod etc.)
-* [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies — dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.
-* [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report — remove SELECT DISTINCT that was hiding identical legitimate movements
-* Fix the Periodic Stock On Hand Summary header printing the literal `null` for Facility when no facility is selected. Program and Product already fell back to "All"; Facility printed the raw parameter. All three now read the fallback from `report.header.value.all` instead of a hard-coded English literal.
+* [OLMIS-8235](https://openlmis.atlassian.net/browse/OLMIS-8235): Fix HTTP 500 when re-uploading (override=true) a template whose parameters carry dependencies - dependency rows were written with a null parameterId; parameters and their dependencies are now reconciled in place with the parameter id preserved.
+* [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187): Fix duplicate rows in Periodic SOH report - remove SELECT DISTINCT that was hiding identical legitimate movements
+* [OLMIS-8224](https://openlmis.atlassian.net/browse/OLMIS-8224): Fix the Periodic Stock On Hand Summary header printing the literal `null` for Facility when no facility is selected. Program and Product already fell back to "All"; Facility printed the raw parameter. All three now read the fallback from `report.header.value.all` instead of a hard-coded English literal.
+* [OLMIS-8223](https://openlmis.atlassian.net/browse/OLMIS-8223): Fixed apostrophes in messages.
 
 New functionality:
 * [MW-1449](https://openlmis.atlassian.net/browse/MW-1449): Added Superset guest token endpoint for embedded dashboards. Dashboard reports now carry an optional `embeddedUuid` column referencing a Superset embedded dashboard. The new `/api/reports/superset/guest-token` endpoint exchanges an OpenLMIS user for a short-lived Superset guest token, gated by the `REPORTS_VIEW` right and a lookup against the dashboard's `embeddedUuid`.
-
-Bugs:
-* [OLMIS-8187](https://openlmis.atlassian.net/browse/OLMIS-8187) Fix duplicate rows in Periodic SOH report
 
 1.5.0 / 2025-11-27
 ==================
