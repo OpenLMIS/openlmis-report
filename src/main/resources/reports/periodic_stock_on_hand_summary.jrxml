@@ -728,10 +728,10 @@
 	</detail>
 	<pageFooter>
 		<band height="40">
-			<textField evaluationTime="Master">
+			<textField isStretchWithOverflow="true" evaluationTime="Master">
 				<reportElement x="640" y="3" width="161" height="30" uuid="f1db7f67-876a-48ce-a6d2-2fdf4b475085"/>
 				<textElement textAlignment="Right" verticalAlignment="Top"/>
-				<textFieldExpression><![CDATA["Page " + $V{MASTER_CURRENT_PAGE} + " of " + $V{MASTER_TOTAL_PAGES}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[msg($R{report.controls.pageOfPages}, $V{MASTER_CURRENT_PAGE}, $V{MASTER_TOTAL_PAGES})]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageFooter>
