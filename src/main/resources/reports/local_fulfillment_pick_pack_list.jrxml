@@ -90,7 +90,7 @@ FROM
     ON dispensable.id = orderable.dispensableid
   JOIN
   fulfillment.order_line_items order_li
-    ON order_li.orderid = shipment.orderid AND order_li.orderableid = shipment_li.orderableid AND shipment_li.orderableversionnumber = order_li.orderableversionnumber
+    ON order_li.orderid = shipment.orderid AND order_li.orderableid = shipment_li.orderableid
   LEFT JOIN
   referencedata.lots lot
     ON shipment_li.lotid = lot.id
@@ -184,7 +184,7 @@ WHERE
       ON shipment_dispensable_attribute.key = order_dispensable_attribute.key
     WHERE order_dispensable_attribute.dispensableid = order_orderable.dispensableid
       AND shipment_dispensable_attribute.dispensableid = dispensable.id
-      AND order_dispensable_attribute.value <> shipment_dispensable_attribute.value)
+      AND lower(order_dispensable_attribute.value) <> lower(shipment_dispensable_attribute.value))
   AND stock_card_li.id IN
   (SELECT id
    FROM stockmanagement.stock_card_line_items
