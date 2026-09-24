@@ -90,7 +90,7 @@ FROM
     ON dispensable.id = orderable.dispensableid
   JOIN
   fulfillment.order_line_items order_li
-    ON order_li.orderid = shipment.orderid AND order_li.orderableid = shipment_li.orderableid AND shipment_li.orderableversionnumber = order_li.orderableversionnumber
+    ON order_li.orderid = shipment.orderid AND order_li.orderableid = shipment_li.orderableid
   LEFT JOIN
   referencedata.lots lot
     ON shipment_li.lotid = lot.id
@@ -139,40 +139,35 @@ FROM
   JOIN
   referencedata.dispensables dispensable
     ON dispensable.id = orderable.dispensableid
-  JOIN referencedata.orderable_identifiers shipment_orderable_identifier ON orderable.id = shipment_orderable_identifier.orderableid
-                                                       AND (shipment_orderable_identifier.key = 'tradeItem' OR shipment_orderable_identifier.key = 'commodityType')
+  JOIN
+  referencedata.orderable_identifiers shipment_orderable_identifier
+    ON shipment_orderable_identifier.orderableid = orderable.id
+    AND shipment_orderable_identifier.orderableversionnumber = orderable.versionnumber
+    AND shipment_orderable_identifier.key = 'tradeItem'
+  JOIN
+  referencedata.trade_item_classifications trade_item_classification
+    ON trade_item_classification.tradeitemid = shipment_orderable_identifier.value::uuid
+  JOIN
+  referencedata.commodity_types commodity_type
+    ON commodity_type.classificationsystem = trade_item_classification.classificationsystem
+    AND commodity_type.classificationid = trade_item_classification.classificationid
   JOIN
   fulfillment.order_line_items order_li
-    ON order_li.orderid = shipment.orderid AND order_li.orderableid = shipment_li.orderableid
-	AND order_li.orderableid IN (
-        SELECT o.id
-        FROM referencedata.orderables o
-        LEFT JOIN referencedata.orderable_identifiers order_orderable_identifier
-          ON o.id = order_orderable_identifier.orderableid
-        LEFT JOIN referencedata.trade_items trade_item
-          ON order_orderable_identifier.value::uuid = trade_item.id
-        LEFT JOIN referencedata.commodity_types commodity_type
-          ON order_orderable_identifier.value::uuid = commodity_type.id
-        WHERE NOT EXISTS (
-          SELECT 1
-          FROM referencedata.dispensable_attributes orderer_dispensable_attribute
-          JOIN referencedata.dispensable_attributes shipment_dispensable_attribute
-            ON shipment_dispensable_attribute.dispensableid = orderer_dispensable_attribute.dispensableid
-          WHERE orderer_dispensable_attribute.key = shipment_dispensable_attribute.key
-            AND orderer_dispensable_attribute.value <> shipment_dispensable_attribute.value
-        )
-        AND (
-          shipment_orderable_identifier.value::uuid = trade_item.id
-          OR shipment_orderable_identifier.value::uuid = commodity_type.id
-        )
-      )
-  LEFT JOIN
-  referencedata.lots lot
-    ON shipment_li.lotid = lot.id
+    ON order_li.orderid = shipment.orderid
+    AND order_li.orderableid <> shipment_li.orderableid
   JOIN
   referencedata.orderables order_orderable
     ON order_orderable.id = order_li.orderableid
     AND order_orderable.versionnumber = order_li.orderableversionnumber
+  JOIN
+  referencedata.orderable_identifiers order_orderable_identifier
+    ON order_orderable_identifier.orderableid = order_orderable.id
+    AND order_orderable_identifier.orderableversionnumber = order_orderable.versionnumber
+    AND order_orderable_identifier.key = 'commodityType'
+    AND order_orderable_identifier.value::uuid = commodity_type.id
+  LEFT JOIN
+  referencedata.lots lot
+    ON shipment_li.lotid = lot.id
   JOIN
   stockmanagement.stock_cards stock_card
     ON (stock_card.facilityId = ord.supplyingFacilityId AND stock_card.programId = ord.programId AND shipment_li.orderableId = stock_card.orderableId AND ((shipment_li.lotId IS NULL AND stock_card.lotId IS NULL) OR shipment_li.lotId = stock_card.lotId))
@@ -182,6 +177,14 @@ FROM
 WHERE
   shipment.id = $P{shipmentDraftId}::uuid
   AND shipment_li.quantityshipped > 0
+  AND NOT EXISTS (
+    SELECT 1
+    FROM referencedata.dispensable_attributes order_dispensable_attribute
+    JOIN referencedata.dispensable_attributes shipment_dispensable_attribute
+      ON shipment_dispensable_attribute.key = order_dispensable_attribute.key
+    WHERE order_dispensable_attribute.dispensableid = order_orderable.dispensableid
+      AND shipment_dispensable_attribute.dispensableid = dispensable.id
+      AND lower(order_dispensable_attribute.value) <> lower(shipment_dispensable_attribute.value))
   AND stock_card_li.id IN
   (SELECT id
    FROM stockmanagement.stock_card_line_items
