@@ -1,6 +1,9 @@
 1.7.0-SNAPSHOT (WIP)
 ==================
 
+Bugs:
+* [OLMIS-8404](https://openlmis.atlassian.net/browse/OLMIS-8404): Fixed report translations typed in the Transifex editor printing garbled. Transifex exports them as raw UTF-8, which Java 8 read as ISO-8859-1, so the requisition print showed seven French statuses (such as "LibÃ©rÃ©e" for "Libérée") and the Spanish and Portuguese "In approval" garbled. The shipped bundles and the deployment override directory are read as UTF-8, and a file that is not valid UTF-8 as ISO-8859-1.
+
 1.6.0 / 2026-09-28
 ==================
 
