@@ -135,6 +135,9 @@ directory actually did:
   of the base bundle that should be trimmed from the override directory. Set this class to
   `debug` to list the keys.
 
+Bundle files are read as UTF-8, both the ones shipped in the jar and the overrides. A file that is
+not valid UTF-8 is read as ISO-8859-1, and `\uXXXX` escapes work in either.
+
 Locale resolution is deterministic: a locale with no translation file falls back to the English
 base bundle, never to the JVM default locale of whichever container the service happens to run
 in. Merged bundles and the compiled global header are cached for the service lifetime, so any

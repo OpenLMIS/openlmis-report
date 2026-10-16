@@ -3,6 +3,7 @@
 
 Bug fixes:
 * [OLMIS-8405](https://openlmis.atlassian.net/browse/OLMIS-8405): A service whose health check fails stays registered in Consul. Consul no longer removes it after 10 minutes in the critical state. The service registers only once, at startup, so after a removal nginx answered HTTP 502 for it until the container was restarted, even when the service itself had recovered. The health check keeps running and still reports the critical state.
+* [OLMIS-8404](https://openlmis.atlassian.net/browse/OLMIS-8404): Fixed report translations typed in the Transifex editor printing garbled. Transifex exports them as raw UTF-8, which Java 8 read as ISO-8859-1, so the requisition print showed seven French statuses (such as "LibÃ©rÃ©e" for "Libérée") and the Spanish and Portuguese "In approval" garbled. The shipped bundles and the deployment override directory are read as UTF-8, and a file that is not valid UTF-8 as ISO-8859-1.
 
 1.6.0 / 2026-09-28
 ==================
